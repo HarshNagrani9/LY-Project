@@ -1,3 +1,4 @@
+'use server';
 import {
   collection,
   addDoc,
@@ -47,7 +48,8 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
     );
   } catch (error) {
     console.error('Error getting health records: ', error);
-    throw new Error('Failed to get health records.');
+    // Throw the original error for better debugging
+    throw error;
   }
 };
 
@@ -80,6 +82,7 @@ export const getSharedRecords = async (shareId: string) => {
     return { records, userId };
   } catch (error) {
     console.error('Error getting shared records: ', error);
+    // Throw the original error for better debugging
     throw error;
   }
 };
