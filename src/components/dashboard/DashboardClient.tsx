@@ -1,0 +1,99 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { getHealthRecords } from '@/lib/firebase/firestore';
+import type { HealthRecord } from '@/lib/types';
+import { HealthTimeline } from './HealthTimeline';
+import { AiAssistant } from './AiAssistant';
+import { HealthRecordForm } from './HealthRecordForm';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, Share2, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShareRecordDialog } from './ShareRecordDialog';
+
+export function DashboardClient() {
+  const { user } = useAuth();
+  const [records, setRecords] = useState<HealthRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const fetchRecords = async () => {
+    if (user) {
+      setLoading(true);
+      const userRecords = await getHealthRecords(user.uid);
+      setRecords(userRecords);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecords();
+  }, [user]);
+
+  const handleRecordAdded = () => {
+    fetchRecords();
+    setIsFormOpen(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Health Timeline</CardTitle>
+              <CardDescription>
+                Your chronological medical history.
+              </CardDescription>
+            </div>
+            <HealthRecordForm
+              open={isFormOpen}
+              onOpenChange={setIsFormOpen}
+              onSuccess={handleRecordAdded}
+            >
+              <Button onClick={() => setIsFormOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Record
+              </Button>
+            </HealthRecordForm>
+          </CardHeader>
+          <CardContent>
+            <HealthTimeline records={records} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Actions</CardTitle>
+            <CardDescription>Quick actions for your records.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ShareRecordDialog
+              open={isShareOpen}
+              onOpenChange={setIsShareOpen}
+            >
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => setIsShareOpen(true)}
+              >
+                <Share2 className="mr-2 h-4 w-4" /> Share Records with Doctor
+              </Button>
+            </ShareRecordDialog>
+          </CardContent>
+        </Card>
+        <AiAssistant records={records} />
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,136 @@
+'use client';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  LayoutDashboard,
+  LogOut,
+  User,
+  HeartPulse,
+  Loader2,
+} from 'lucide-react';
+import Logo from '@/components/icons/Logo';
+import { useToast } from '@/hooks/use-toast';
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
+      router.push('/login');
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to sign out.', variant: 'destructive' });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    router.replace('/login');
+    return (
+       <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const getInitials = (email: string | null) => {
+    if (!email) return 'U';
+    return email.substring(0, 2).toUpperCase();
+  };
+
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Logo className="w-8 h-8" />
+            <span className="font-bold text-xl group-data-[collapsible=icon]:hidden">
+              MediSafe
+            </span>
+          </Link>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Dashboard">
+                <Link href="/dashboard">
+                  <LayoutDashboard />
+                  <span>Dashboard</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="My Records">
+                <Link href="/dashboard">
+                  <HeartPulse />
+                  <span>My Records</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="flex items-center gap-3 p-2 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center">
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user.photoURL ?? ''} />
+              <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+              <span className="text-sm font-medium truncate">
+                {user.email}
+              </span>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2"
+            onClick={handleSignOut}
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="group-data-[collapsible=icon]:hidden">
+              Sign Out
+            </span>
+          </Button>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          <SidebarTrigger className="md:hidden" />
+          <h1 className="text-xl font-semibold font-headline">Dashboard</h1>
+        </header>
+        <main className="p-4 sm:px-6 sm:py-0">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
