@@ -9,6 +9,7 @@ export interface UserDocument {
     email: string;
     role: 'patient' | 'doctor';
     createdAt: any;
+    connections?: string[]; // Array of patient UIDs for doctors
 }
 
 export interface HealthRecord {

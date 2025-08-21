@@ -10,6 +10,9 @@ import {
   doc,
   Timestamp,
   setDoc,
+  updateDoc,
+  arrayUnion,
+  documentId,
 } from 'firebase/firestore';
 import { db } from './config';
 import type { HealthRecord, UserDocument } from '@/lib/types';
@@ -91,11 +94,9 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
         if (timestamp instanceof Timestamp) {
             return timestamp.toDate();
         }
-        // Handle cases where the timestamp might already be serialized
         if (typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
             return new Timestamp(timestamp.seconds, timestamp.nanoseconds).toDate();
         }
-        // Handle if it's already a string or Date object
         const d = new Date(timestamp);
         if (!isNaN(d.getTime())) {
           return d;
@@ -113,12 +114,11 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
       } as unknown as HealthRecord;
     });
 
-    // Sort records by date in descending order on the client-side
     return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   } catch (error) {
     console.error('Error getting health records: ', error);
-    throw error;
+    throw new Error('Failed to fetch health records.');
   }
 };
 
@@ -154,3 +154,54 @@ export const getSharedRecords = async (shareId: string) => {
     throw error;
   }
 };
+
+// Search for patients by email
+export const searchPatientsByEmail = async (email: string): Promise<UserDocument[]> => {
+    if (!email) return [];
+    try {
+        const q = query(
+            collection(db, USERS_COLLECTION),
+            where('role', '==', 'patient'),
+            where('email', '>=', email),
+            where('email', '<=', email + '\uf8ff')
+        );
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => doc.data() as UserDocument);
+    } catch (error) {
+        console.error("Error searching patients:", error);
+        return [];
+    }
+}
+
+// Add a patient to a doctor's connection list
+export const connectDoctorToPatient = async (doctorId: string, patientId: string) => {
+    try {
+        const doctorRef = doc(db, USERS_COLLECTION, doctorId);
+        await updateDoc(doctorRef, {
+            connections: arrayUnion(patientId)
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error connecting doctor to patient:", error);
+        return { success: false, error: "Failed to connect." };
+    }
+}
+
+// Get a doctor's connected patients
+export const getConnectedPatients = async (doctorId: string): Promise<UserDocument[]> => {
+    try {
+        const doctorDoc = await getUserDocument(doctorId);
+        if (!doctorDoc || !doctorDoc.connections || doctorDoc.connections.length === 0) {
+            return [];
+        }
+
+        const patientIds = doctorDoc.connections;
+        const patientsQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', patientIds));
+        const querySnapshot = await getDocs(patientsQuery);
+
+        return querySnapshot.docs.map(doc => doc.data() as UserDocument);
+    } catch (error) {
+        console.error("Error getting connected patients:", error);
+        return [];
+    }
+}

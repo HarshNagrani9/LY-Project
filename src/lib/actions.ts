@@ -1,6 +1,6 @@
 'use server';
 
-import { createShare } from './firebase/firestore';
+import { createShare, searchPatientsByEmail as searchPatients, connectDoctorToPatient as connect, getConnectedPatients as getPatients } from './firebase/firestore';
 import { headers } from 'next/headers';
 
 export async function createShareLink(userId: string) {
@@ -16,4 +16,16 @@ export async function createShareLink(userId: string) {
   } catch (error) {
     return { url: null, error: 'Failed to create share link.' };
   }
+}
+
+export async function searchPatients(email: string) {
+    return searchPatients(email);
+}
+
+export async function connectDoctorToPatient(doctorId: string, patientId: string) {
+    return connect(doctorId, patientId);
+}
+
+export async function getConnectedPatients(doctorId: string) {
+    return getPatients(doctorId);
 }
