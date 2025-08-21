@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -37,6 +38,13 @@ export default function DashboardLayout({
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [loading, user, router]);
+
+
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -47,18 +55,9 @@ export default function DashboardLayout({
     }
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    router.replace('/login');
-    return (
-       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
