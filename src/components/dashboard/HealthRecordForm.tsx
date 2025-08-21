@@ -4,7 +4,6 @@ import { useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/use-auth';
 import { addHealthRecord } from '@/lib/firebase/firestore';
 
@@ -91,11 +90,9 @@ export function HealthRecordForm({
     }
     setIsLoading(true);
     try {
-      const recordData = {
-        ...values,
-        date: Timestamp.fromDate(values.date),
-      };
-      await addHealthRecord(user.uid, recordData);
+      // Pass the plain 'values' object directly to the server action.
+      // The date is a standard JavaScript Date object, which is serializable.
+      await addHealthRecord(user.uid, values);
       toast({
         title: 'Success',
         description: 'Health record added successfully.',

@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   getDoc,
   doc,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from './config';
 import type { HealthRecord } from '@/lib/types';
@@ -19,11 +20,12 @@ const SHARES_COLLECTION = 'shares';
 // Add a new health record for a user
 export const addHealthRecord = async (
   userId: string,
-  recordData: Omit<HealthRecord, 'id' | 'userId' | 'createdAt'>
+  recordData: Omit<HealthRecord, 'id' | 'userId' | 'createdAt' | 'date'> & { date: Date }
 ) => {
   try {
     const docRef = await addDoc(collection(db, HEALTH_RECORDS_COLLECTION), {
       ...recordData,
+      date: Timestamp.fromDate(recordData.date), // Convert Date to Timestamp on the server
       userId,
       createdAt: serverTimestamp(),
     });
