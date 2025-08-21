@@ -5,8 +5,9 @@ import { analyzeHealthRecords } from '@/ai/flows/analyze-health-records';
 import type { HealthRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bot, Loader2, Sparkles } from 'lucide-react';
+import { Bot, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 interface AiAssistantProps {
   records: HealthRecord[];
@@ -71,9 +72,18 @@ export function AiAssistant({ records }: AiAssistantProps) {
         </Button>
 
         {insights && (
-            <div className="p-4 bg-secondary rounded-lg text-sm text-secondary-foreground space-y-2">
-                <h4 className="font-semibold">Health Insights:</h4>
-                <p className="whitespace-pre-wrap">{insights}</p>
+            <div className="space-y-4">
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Disclaimer</AlertTitle>
+                    <AlertDescription>
+                        Its AI generated, consult a doctor for accurate predictions.
+                    </AlertDescription>
+                </Alert>
+                <div className="p-4 bg-secondary rounded-lg text-sm text-secondary-foreground space-y-2">
+                    <h4 className="font-semibold">Health Insights:</h4>
+                    <p className="whitespace-pre-wrap">{insights}</p>
+                </div>
             </div>
         )}
       </CardContent>
