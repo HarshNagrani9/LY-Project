@@ -41,12 +41,11 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
   try {
     const q = query(
       collection(db, HEALTH_RECORDS_COLLECTION),
-      where('userId', '==', userId),
-      orderBy('date', 'desc')
+      where('userId', '==', userId)
     );
     const querySnapshot = await getDocs(q);
     // Convert Firestore Timestamps to serializable Date objects
-    return querySnapshot.docs.map((doc) => {
+    const records = querySnapshot.docs.map((doc) => {
       const data = doc.data();
       const date = (data.date as Timestamp)?.toDate();
       const createdAt = (data.createdAt as Timestamp)?.toDate();
@@ -57,6 +56,10 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
         createdAt: createdAt ? createdAt.toISOString() : new Date().toISOString(),
       } as unknown as HealthRecord;
     });
+
+    // Sort records by date in descending order on the client-side
+    return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   } catch (error) {
     console.error('Error getting health records: ', error);
     throw error;
