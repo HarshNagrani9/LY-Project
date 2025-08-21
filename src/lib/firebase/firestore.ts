@@ -172,6 +172,12 @@ export const searchPatientsByEmail = async (email: string): Promise<UserDocument
 // Create a connection request from a doctor to a patient
 export const createConnectionRequest = async (doctorId: string, doctorEmail: string, patientId: string) => {
     try {
+        // Check if they are already connected
+        const doctorDoc = await getUserDocument(doctorId);
+        if (doctorDoc?.connections?.includes(patientId)) {
+             return { success: false, error: "You are already connected with this patient." };
+        }
+        
         // Check if a pending request already exists
         const q = query(collection(db, CONNECTION_REQUESTS_COLLECTION),
             where('doctorId', '==', doctorId),
