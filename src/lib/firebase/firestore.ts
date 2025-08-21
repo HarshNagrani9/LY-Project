@@ -47,7 +47,7 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
     );
   } catch (error) {
     console.error('Error getting health records: ', error);
-    return [];
+    throw new Error('Failed to get health records.');
   }
 };
 
