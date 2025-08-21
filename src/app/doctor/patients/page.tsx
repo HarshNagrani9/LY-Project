@@ -46,8 +46,8 @@ export default function FindPatientsPage() {
     }, [searchTerm, debouncedSearch]);
 
     const handleRequestConnection = async (patientId: string) => {
-        if (!user?.uid || !user.email) return;
-        const result = await requestPatientConnection(user.uid, user.email, patientId);
+        if (!user?.uid) return;
+        const result = await requestPatientConnection(user.uid, patientId);
         if (result.success) {
             toast({
                 title: 'Success',

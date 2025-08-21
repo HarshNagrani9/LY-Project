@@ -8,14 +8,14 @@ import Logo from '@/components/icons/Logo';
 import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const recordIcons = {
+const recordIcons: Record<HealthRecord['type'], React.ReactElement> = {
   prescription: <Stethoscope className="h-6 w-6 text-blue-500" />,
   lab_report: <TestTube2 className="h-6 w-6 text-green-500" />,
   allergy: <AlertTriangle className="h-6 w-6 text-red-500" />,
   note: <FileText className="h-6 w-6 text-gray-500" />,
 };
 
-const recordLabels = {
+const recordLabels: Record<HealthRecord['type'], string> = {
   prescription: 'Prescription',
   lab_report: 'Lab Report',
   allergy: 'Allergy',

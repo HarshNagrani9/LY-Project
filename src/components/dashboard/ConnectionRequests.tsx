@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { getPendingConnectionRequests, updateConnectionRequest } from '@/lib/actions';
-import type { ConnectionRequest } from '@/lib/types';
+import type { UserDocument } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Check, X, BellOff } from 'lucide-react';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 export function ConnectionRequests() {
     const { user } = useAuth();
     const { toast } = useToast();
-    const [requests, setRequests] = useState<ConnectionRequest[]>([]);
+    const [requests, setRequests] = useState<UserDocument[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchRequests = useCallback(async () => {
@@ -27,8 +27,9 @@ export function ConnectionRequests() {
         fetchRequests();
     }, [fetchRequests]);
 
-    const handleUpdateRequest = async (requestId: string, status: 'approved' | 'denied') => {
-        const result = await updateConnectionRequest(requestId, status);
+    const handleUpdateRequest = async (doctorId: string, status: 'approved' | 'denied') => {
+        if (!user?.uid) return;
+        const result = await updateConnectionRequest(user.uid, doctorId, status);
         if (result.success) {
             toast({
                 title: 'Success',
@@ -67,16 +68,16 @@ export function ConnectionRequests() {
                 {requests.length > 0 ? (
                     <ul className="space-y-3">
                         {requests.map((req) => (
-                            <li key={req.id} className="flex items-center justify-between p-3 bg-secondary rounded-md">
+                            <li key={req.uid} className="flex items-center justify-between p-3 bg-secondary rounded-md">
                                 <div>
-                                    <p className="text-sm font-medium">{req.doctorEmail}</p>
+                                    <p className="text-sm font-medium">{req.email}</p>
                                     <p className="text-xs text-muted-foreground">Wants to connect</p>
                                 </div>
                                 <div className='flex gap-2'>
-                                    <Button size="icon" variant="outline" className='h-8 w-8' onClick={() => handleUpdateRequest(req.id, 'denied')}>
+                                    <Button size="icon" variant="outline" className='h-8 w-8' onClick={() => handleUpdateRequest(req.uid, 'denied')}>
                                         <X className="h-4 w-4 text-destructive" />
                                     </Button>
-                                    <Button size="icon" className='h-8 w-8' onClick={() => handleUpdateRequest(req.id, 'approved')}>
+                                    <Button size="icon" className='h-8 w-8' onClick={() => handleUpdateRequest(req.uid, 'approved')}>
                                         <Check className="h-4 w-4" />
                                     </Button>
                                 </div>

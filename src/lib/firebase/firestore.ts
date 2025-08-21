@@ -13,14 +13,14 @@ import {
   updateDoc,
   arrayUnion,
   documentId,
+  arrayRemove,
 } from 'firebase/firestore';
 import { db } from './config';
-import type { HealthRecord, UserDocument, ConnectionRequest } from '@/lib/types';
+import type { HealthRecord, UserDocument } from '@/lib/types';
 
 const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
 const SHARES_COLLECTION = 'shares';
-const CONNECTION_REQUESTS_COLLECTION = 'connectionRequests';
 
 const convertTimestamp = (data: any) => {
     if (data && data.createdAt && typeof data.createdAt.toDate === 'function') {
@@ -36,11 +36,7 @@ export const getUserDocument = async (userId: string): Promise<UserDocument | nu
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
             const data = userSnap.data();
-            // Ensure createdAt is converted if it exists
-            if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-                return { ...data, createdAt: data.createdAt.toDate().toISOString() } as UserDocument;
-            }
-            return data as UserDocument;
+            return convertTimestamp(data) as UserDocument;
         }
         return null;
     } catch (error) {
@@ -58,7 +54,8 @@ export const createUserDocument = async (userId: string, email: string, role: 'p
             email,
             role,
             createdAt: serverTimestamp(),
-            connections: [],
+            pendingConnections: [],
+            successfulConnections: [],
         });
     } catch (error) {
         console.error("Error creating user document:", error);
@@ -147,8 +144,6 @@ export const createShare = async (userId: string) => {
 // Get shared records by share ID
 export const getSharedRecords = async (shareId: string) => {
   try {
-    // This function is now deprecated in favor of direct access for connected doctors.
-    // We will check for a patient ID directly.
     const records = await getHealthRecords(shareId);
     return { records, userId: shareId };
   } catch (error) {
@@ -175,32 +170,30 @@ export const searchPatientsByEmail = async (email: string): Promise<UserDocument
 }
 
 // Create a connection request from a doctor to a patient
-export const createConnectionRequest = async (doctorId: string, doctorEmail: string, patientId: string) => {
+export const createConnectionRequest = async (doctorId: string, patientId: string) => {
     try {
-        // Check if they are already connected
         const doctorDoc = await getUserDocument(doctorId);
-        if (doctorDoc?.connections?.includes(patientId)) {
-             return { success: false, error: "You are already connected with this patient." };
+        const patientDoc = await getUserDocument(patientId);
+
+        if (!doctorDoc || !patientDoc) {
+             return { success: false, error: "Doctor or patient not found." };
         }
         
-        // Check if a pending request already exists
-        const q = query(collection(db, CONNECTION_REQUESTS_COLLECTION),
-            where('doctorId', '==', doctorId),
-            where('patientId', '==', patientId),
-            where('status', '==', 'pending')
-        );
-        const existingRequest = await getDocs(q);
-        if (!existingRequest.isEmpty) {
+        if (doctorDoc.successfulConnections?.includes(patientId)) {
+            return { success: false, error: "You are already connected with this patient." };
+        }
+
+        if (doctorDoc.pendingConnections?.includes(patientId)) {
             return { success: false, error: "A connection request has already been sent." };
         }
 
-        await addDoc(collection(db, CONNECTION_REQUESTS_COLLECTION), {
-            doctorId,
-            doctorEmail,
-            patientId,
-            status: 'pending',
-            createdAt: serverTimestamp(),
-        });
+        // Add to pending connections for both users
+        const doctorRef = doc(db, USERS_COLLECTION, doctorId);
+        await updateDoc(doctorRef, { pendingConnections: arrayUnion(patientId) });
+
+        const patientRef = doc(db, USERS_COLLECTION, patientId);
+        await updateDoc(patientRef, { pendingConnections: arrayUnion(doctorId) });
+
         return { success: true };
     } catch (error) {
         console.error("Error creating connection request:", error);
@@ -208,52 +201,42 @@ export const createConnectionRequest = async (doctorId: string, doctorEmail: str
     }
 }
 
-// Get pending connection requests for a patient
-export const getPendingConnectionRequests = async (patientId: string): Promise<ConnectionRequest[]> => {
+// Get pending connection requests for a user (can be patient or doctor)
+export const getPendingConnections = async (userId: string): Promise<UserDocument[]> => {
     try {
-        const q = query(collection(db, CONNECTION_REQUESTS_COLLECTION), 
-            where('patientId', '==', patientId),
-            where('status', '==', 'pending')
-        );
-        const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...convertTimestamp(data),
-            } as ConnectionRequest;
-        });
+        const userDoc = await getUserDocument(userId);
+        if (!userDoc || !userDoc.pendingConnections || userDoc.pendingConnections.length === 0) {
+            return [];
+        }
+
+        const userIds = userDoc.pendingConnections;
+        const usersQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', userIds));
+        const querySnapshot = await getDocs(usersQuery);
+
+        return querySnapshot.docs.map(doc => convertTimestamp(doc.data()) as UserDocument);
     } catch (error) {
-        console.error("Error fetching connection requests:", error);
+        console.error("Error getting pending connections:", error);
         return [];
     }
 }
 
+
 // Update the status of a connection request
-export const updateConnectionRequestStatus = async (requestId: string, status: 'approved' | 'denied') => {
+export const updateConnectionRequest = async (patientId: string, doctorId: string, status: 'approved' | 'denied') => {
     try {
-        const requestRef = doc(db, CONNECTION_REQUESTS_COLLECTION, requestId);
-        const requestSnap = await getDoc(requestRef);
+        const patientRef = doc(db, USERS_COLLECTION, patientId);
+        const doctorRef = doc(db, USERS_COLLECTION, doctorId);
         
-        if (!requestSnap.exists()) {
-            throw new Error("Request document not found.");
-        }
-        const requestData = requestSnap.data() as ConnectionRequest;
-
-        if (requestData.status !== 'pending') {
-            return { success: false, error: `This request has already been ${requestData.status}.` };
-        }
-
-        await updateDoc(requestRef, { status });
+        // Remove from pending for both
+        await updateDoc(patientRef, { pendingConnections: arrayRemove(doctorId) });
+        await updateDoc(doctorRef, { pendingConnections: arrayRemove(patientId) });
 
         if (status === 'approved') {
-            // Add connection to both doctor and patient
-            const doctorRef = doc(db, USERS_COLLECTION, requestData.doctorId);
-            await updateDoc(doctorRef, { connections: arrayUnion(requestData.patientId) });
-
-            const patientRef = doc(db, USERS_COLLECTION, requestData.patientId);
-            await updateDoc(patientRef, { connections: arrayUnion(requestData.doctorId) });
+            // Add to successful connections for both
+            await updateDoc(patientRef, { successfulConnections: arrayUnion(doctorId) });
+            await updateDoc(doctorRef, { successfulConnections: arrayUnion(patientId) });
         }
+
         return { success: true };
     } catch (error) {
         console.error(`Error updating connection request to ${status}:`, error);
@@ -261,18 +244,16 @@ export const updateConnectionRequestStatus = async (requestId: string, status: '
     }
 }
 
+
 // Get a doctor's connected patients
 export const getConnectedPatients = async (doctorId: string): Promise<UserDocument[]> => {
     try {
         const doctorDoc = await getUserDocument(doctorId);
-        if (!doctorDoc || !doctorDoc.connections || doctorDoc.connections.length === 0) {
+        if (!doctorDoc || !doctorDoc.successfulConnections || doctorDoc.successfulConnections.length === 0) {
             return [];
         }
 
-        const patientIds = doctorDoc.connections;
-        if (patientIds.length === 0) {
-            return [];
-        }
+        const patientIds = doctorDoc.successfulConnections;
         const patientsQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', patientIds));
         const querySnapshot = await getDocs(patientsQuery);
 
@@ -287,14 +268,11 @@ export const getConnectedPatients = async (doctorId: string): Promise<UserDocume
 export const getConnectedDoctors = async (patientId: string): Promise<UserDocument[]> => {
     try {
         const patientDoc = await getUserDocument(patientId);
-        if (!patientDoc || !patientDoc.connections || patientDoc.connections.length === 0) {
+        if (!patientDoc || !patientDoc.successfulConnections || patientDoc.successfulConnections.length === 0) {
             return [];
         }
 
-        const doctorIds = patientDoc.connections;
-         if (doctorIds.length === 0) {
-            return [];
-        }
+        const doctorIds = patientDoc.successfulConnections;
         const doctorsQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', doctorIds));
         const querySnapshot = await getDocs(doctorsQuery);
 

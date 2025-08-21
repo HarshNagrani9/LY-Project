@@ -9,7 +9,8 @@ export interface UserDocument {
     email: string;
     role: 'patient' | 'doctor';
     createdAt: any;
-    connections?: string[]; // Array of patient UIDs for doctors or doctor UIDs for patients
+    pendingConnections?: string[]; // Array of UIDs for pending requests
+    successfulConnections?: string[]; // Array of UIDs for successful connections
 }
 
 export interface HealthRecord {
@@ -22,6 +23,7 @@ export interface HealthRecord {
   createdAt: string; 
 }
 
+// This is no longer needed with the new data model
 export interface ConnectionRequest {
     id: string;
     doctorId: string;

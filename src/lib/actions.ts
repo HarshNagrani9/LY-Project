@@ -3,15 +3,16 @@
 import {
   createShare,
   searchPatientsByEmail,
-  createConnectionRequest,
+  createConnectionRequest as createRequest,
   getConnectedPatients as getPatients,
-  getPendingConnectionRequests as getRequests,
-  updateConnectionRequestStatus as updateRequest,
+  getPendingConnections,
+  updateConnectionRequest as updateRequest,
   getHealthRecords,
   getUserDocument,
 } from './firebase/firestore';
 import { headers } from 'next/headers';
 import { auth } from './firebase/config';
+import { revalidatePath } from 'next/cache';
 
 export async function createShareLink(userId: string) {
   if (!userId) {
@@ -30,8 +31,12 @@ export async function createShareLink(userId: string) {
 
 export { searchPatientsByEmail };
 
-export async function requestPatientConnection(doctorId: string, doctorEmail:string, patientId: string) {
-    return createConnectionRequest(doctorId, doctorEmail, patientId);
+export async function requestPatientConnection(doctorId: string, patientId: string) {
+    const result = await createRequest(doctorId, patientId);
+    if(result.success) {
+        revalidatePath('/doctor/patients');
+    }
+    return result;
 }
 
 export async function getConnectedPatients(doctorId: string) {
@@ -39,11 +44,15 @@ export async function getConnectedPatients(doctorId: string) {
 }
 
 export async function getPendingConnectionRequests(patientId: string) {
-    return getRequests(patientId);
+    return getPendingConnections(patientId);
 }
 
-export async function updateConnectionRequest(requestId: string, status: 'approved' | 'denied') {
-    return updateRequest(requestId, status);
+export async function updateConnectionRequest(patientId: string, doctorId: string, status: 'approved' | 'denied') {
+    const result = await updateRequest(patientId, doctorId, status);
+    if(result.success) {
+        revalidatePath('/dashboard');
+    }
+    return result;
 }
 
 export async function getPatientRecordsForDoctor(patientId: string) {
@@ -53,15 +62,9 @@ export async function getPatientRecordsForDoctor(patientId: string) {
         throw new Error("Authentication error. You must be logged in.");
     }
 
-    const patientDoc = await getUserDocument(patientId);
+    const doctorDoc = await getUserDocument(doctorId);
 
-    // Ensure the patient document exists and has a connections array
-    if (!patientDoc || !Array.isArray(patientDoc.connections)) {
-        throw new Error("Patient data not found or is invalid.");
-    }
-
-    // Check if the doctor's ID is in the patient's connections list
-    if (!patientDoc.connections.includes(doctorId)) {
+    if (!doctorDoc || !doctorDoc.successfulConnections?.includes(patientId)) {
         throw new Error("You do not have permission to view these records.");
     }
     
