@@ -226,8 +226,13 @@ export const updateConnectionRequestStatus = async (requestId: string, status: '
 
         if (status === 'approved') {
             const requestSnap = await getDoc(requestRef);
-            const request = requestSnap.data() as ConnectionRequest;
+            const requestData = requestSnap.data();
             
+            if (!requestData) {
+                throw new Error("Request document not found.");
+            }
+            const request = requestData as ConnectionRequest;
+
             // Add connection to both doctor and patient
             const doctorRef = doc(db, USERS_COLLECTION, request.doctorId);
             await updateDoc(doctorRef, { connections: arrayUnion(request.patientId) });

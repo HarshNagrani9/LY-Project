@@ -28,5 +28,5 @@ export interface ConnectionRequest {
     doctorEmail: string;
     patientId: string;
     status: 'pending' | 'approved' | 'denied';
-    createdAt: string;
+    createdAt: any;
 }

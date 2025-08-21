@@ -70,7 +70,13 @@ export function SignupForm() {
         title: 'Account Created',
         description: 'Your account has been successfully created. Redirecting...',
       });
-      router.push('/dashboard');
+      
+      if (values.role === 'doctor') {
+        router.push('/doctor/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
+
     } catch (err: any) {
         let errorMessage = 'An unexpected error occurred.';
         if (err.code === 'auth/email-already-in-use') {
