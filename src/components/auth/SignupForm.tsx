@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { createUserDocument } from '@/lib/firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,6 +18,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
@@ -26,6 +34,7 @@ const formSchema = z
     email: z.string().email({ message: 'Invalid email address.' }),
     password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
     confirmPassword: z.string(),
+    role: z.enum(['patient', 'doctor'], { required_error: 'Please select a role.' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -44,6 +53,7 @@ export function SignupForm() {
       email: '',
       password: '',
       confirmPassword: '',
+      role: 'patient',
     },
   });
 
@@ -51,15 +61,25 @@ export function SignupForm() {
     setIsLoading(true);
     setError(null);
     try {
-      await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+      
+      await createUserDocument(user.uid, user.email!, values.role);
+
       toast({
         title: 'Account Created',
         description: 'Your account has been successfully created. Redirecting...',
       });
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
-      setIsLoading(false);
+        let errorMessage = 'An unexpected error occurred.';
+        if (err.code === 'auth/email-already-in-use') {
+            errorMessage = 'This email address is already in use by another account.';
+        } else if (err.message) {
+            errorMessage = err.message;
+        }
+        setError(errorMessage);
+        setIsLoading(false);
     }
   }
 
@@ -73,6 +93,27 @@ export function SignupForm() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+        <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Register as</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="patient">Patient</SelectItem>
+                        <SelectItem value="doctor">Doctor</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
         <FormField
           control={form.control}
           name="email"

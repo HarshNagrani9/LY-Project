@@ -5,17 +5,35 @@ import {
   query,
   where,
   getDocs,
-  orderBy,
   serverTimestamp,
   getDoc,
   doc,
   Timestamp,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from './config';
 import type { HealthRecord } from '@/lib/types';
 
+const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
 const SHARES_COLLECTION = 'shares';
+
+// Create a user document
+export const createUserDocument = async (userId: string, email: string, role: 'patient' | 'doctor') => {
+    try {
+        const userRef = doc(db, USERS_COLLECTION, userId);
+        await setDoc(userRef, {
+            uid: userId,
+            email,
+            role,
+            createdAt: serverTimestamp(),
+        });
+    } catch (error) {
+        console.error("Error creating user document:", error);
+        throw new Error('Failed to create user document.');
+    }
+}
+
 
 // Add a new health record for a user
 export const addHealthRecord = async (
@@ -44,10 +62,9 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
       where('userId', '==', userId)
     );
     const querySnapshot = await getDocs(q);
-    // Convert Firestore Timestamps to serializable Date objects
+    
     const records = querySnapshot.docs.map((doc) => {
       const data = doc.data();
-      // Handle both Timestamp objects and plain objects with seconds/nanoseconds
       const getDate = (timestamp: any): Date | null => {
         if (!timestamp) return null;
         if (timestamp instanceof Timestamp) {

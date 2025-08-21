@@ -13,7 +13,7 @@ export default function SignupPage() {
           </Link>
           <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
           <CardDescription>
-            Join MediSafe today to take control of your health journey.
+            Join MediSafe to take control of your health journey.
           </CardDescription>
         </CardHeader>
         <CardContent>

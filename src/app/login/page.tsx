@@ -13,7 +13,7 @@ export default function LoginPage() {
           </Link>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>
-            Log in to your MediSafe account to manage your health records.
+            Log in as a Patient or Doctor to manage your account.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -1,6 +1,8 @@
 import type { User as FirebaseUser } from "firebase/auth";
 
-export interface User extends FirebaseUser {}
+export interface User extends FirebaseUser {
+    role?: 'patient' | 'doctor';
+}
 
 export interface HealthRecord {
   id: string;
