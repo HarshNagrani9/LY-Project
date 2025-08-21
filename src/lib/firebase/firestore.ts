@@ -24,7 +24,13 @@ export const getUserDocument = async (userId: string): Promise<UserDocument | nu
         const userRef = doc(db, USERS_COLLECTION, userId);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-            return userSnap.data() as UserDocument;
+            const data = userSnap.data();
+            // Convert timestamp to serializable format
+            const createdAt = data.createdAt;
+            if (createdAt && typeof createdAt.toDate === 'function') {
+                data.createdAt = createdAt.toDate().toISOString();
+            }
+            return data as UserDocument;
         }
         return null;
     } catch (error) {
@@ -85,8 +91,14 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
         if (timestamp instanceof Timestamp) {
             return timestamp.toDate();
         }
-        if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+        // Handle cases where the timestamp might already be serialized
+        if (typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
             return new Timestamp(timestamp.seconds, timestamp.nanoseconds).toDate();
+        }
+        // Handle if it's already a string or Date object
+        const d = new Date(timestamp);
+        if (!isNaN(d.getTime())) {
+          return d;
         }
         return null;
       }
