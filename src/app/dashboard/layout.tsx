@@ -13,7 +13,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { useAuth } from '@/hooks/use-auth';
@@ -36,6 +36,7 @@ export default function DashboardLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,6 +69,12 @@ export default function DashboardLayout({
     return email.substring(0, 2).toUpperCase();
   };
 
+  const getPageTitle = () => {
+    if (pathname === '/dashboard') return 'Dashboard';
+    if (pathname === '/dashboard/my-records') return 'My Records';
+    return 'Dashboard';
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -82,7 +89,7 @@ export default function DashboardLayout({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Dashboard">
+              <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/dashboard'}>
                 <Link href="/dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
@@ -90,8 +97,8 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="My Records">
-                <Link href="/dashboard">
+              <SidebarMenuButton asChild tooltip="My Records" isActive={pathname === '/dashboard/my-records'}>
+                <Link href="/dashboard/my-records">
                   <HeartPulse />
                   <span>My Records</span>
                 </Link>
@@ -126,7 +133,7 @@ export default function DashboardLayout({
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <SidebarTrigger className="md:hidden" />
-          <h1 className="text-xl font-semibold font-headline">Dashboard</h1>
+          <h1 className="text-xl font-semibold font-headline">{getPageTitle()}</h1>
         </header>
         <main className="p-4 sm:px-6 sm:py-0">{children}</main>
       </SidebarInset>
