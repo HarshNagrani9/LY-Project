@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { getPatientRecordsForDoctor } from '@/lib/actions';
 import type { HealthRecord } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,17 +23,20 @@ const recordLabels: Record<HealthRecord['type'], string> = {
   note: 'Note',
 };
 
-export default function ViewPatientRecordsPage({ params }: { params: { patientId: string } }) {
+export default function ViewPatientRecordsPage() {
+  const params = useParams();
+  const patientId = params.patientId as string;
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRecords = async () => {
+        if (!patientId) return;
       try {
         setLoading(true);
         setError(null);
-        const patientRecords = await getPatientRecordsForDoctor(params.patientId);
+        const patientRecords = await getPatientRecordsForDoctor(patientId);
         setRecords(patientRecords);
       } catch (err: any) {
         setError(err.message || "Failed to fetch records.");
@@ -41,7 +45,7 @@ export default function ViewPatientRecordsPage({ params }: { params: { patientId
       }
     };
     fetchRecords();
-  }, [params.patientId]);
+  }, [patientId]);
 
   if (loading) {
     return (
