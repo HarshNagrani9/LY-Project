@@ -48,7 +48,7 @@ export default async function SharePage({ params }: { params: { shareId: string 
                         <Badge variant="default">{recordLabels[record.type]}</Badge>
                     </div>
                     <CardDescription>
-                        {format(record.date.toDate(), 'MMMM d, yyyy')}
+                        {format(new Date(record.date), 'MMMM d, yyyy')}
                     </CardDescription>
                     </div>
                 </CardHeader>

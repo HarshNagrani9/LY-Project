@@ -58,7 +58,7 @@ export function HealthTimeline({ records }: HealthTimelineProps) {
                 <Badge variant="outline">{recordLabels[record.type]}</Badge>
               </div>
               <CardDescription>
-                {format(record.date.toDate(), 'MMMM d, yyyy')}
+                {format(new Date(record.date), 'MMMM d, yyyy')}
               </CardDescription>
             </div>
           </CardHeader>
