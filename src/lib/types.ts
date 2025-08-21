@@ -8,6 +8,6 @@ export interface HealthRecord {
   type: 'prescription' | 'lab_report' | 'allergy' | 'note';
   title: string;
   content: string;
-  date: Date;
-  createdAt: Date;
+  date: string; // Changed to string to be serializable
+  createdAt: string; // Changed to string to be serializable
 }

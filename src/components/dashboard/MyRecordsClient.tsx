@@ -55,9 +55,9 @@ export function MyRecordsClient() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Health Timeline</CardTitle>
+              <CardTitle>My Health Records</CardTitle>
               <CardDescription>
-                Your chronological medical history.
+                A chronological overview of your medical history.
               </CardDescription>
             </div>
             <HealthRecordForm

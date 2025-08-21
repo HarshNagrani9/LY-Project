@@ -48,16 +48,17 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
     // Convert Firestore Timestamps to serializable Date objects
     return querySnapshot.docs.map((doc) => {
       const data = doc.data();
+      const date = (data.date as Timestamp)?.toDate();
+      const createdAt = (data.createdAt as Timestamp)?.toDate();
       return {
         id: doc.id,
         ...data,
-        date: (data.date as Timestamp).toDate(),
-        createdAt: (data.createdAt as Timestamp)?.toDate(),
+        date: date ? date.toISOString() : new Date().toISOString(),
+        createdAt: createdAt ? createdAt.toISOString() : new Date().toISOString(),
       } as unknown as HealthRecord;
     });
   } catch (error) {
     console.error('Error getting health records: ', error);
-    // Throw the original error for better debugging
     throw error;
   }
 };
@@ -91,7 +92,6 @@ export const getSharedRecords = async (shareId: string) => {
     return { records, userId };
   } catch (error) {
     console.error('Error getting shared records: ', error);
-    // Throw the original error for better debugging
     throw error;
   }
 };
