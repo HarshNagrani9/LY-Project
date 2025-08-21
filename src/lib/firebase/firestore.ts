@@ -233,23 +233,26 @@ export const getPendingConnectionRequests = async (patientId: string): Promise<C
 export const updateConnectionRequestStatus = async (requestId: string, status: 'approved' | 'denied') => {
     try {
         const requestRef = doc(db, CONNECTION_REQUESTS_COLLECTION, requestId);
+        const requestSnap = await getDoc(requestRef);
+        
+        if (!requestSnap.exists()) {
+            throw new Error("Request document not found.");
+        }
+        const requestData = requestSnap.data() as ConnectionRequest;
+
+        if (requestData.status !== 'pending') {
+            return { success: false, error: `This request has already been ${requestData.status}.` };
+        }
+
         await updateDoc(requestRef, { status });
 
         if (status === 'approved') {
-            const requestSnap = await getDoc(requestRef);
-            const requestData = requestSnap.data();
-            
-            if (!requestData) {
-                throw new Error("Request document not found.");
-            }
-            const request = requestData as ConnectionRequest;
-
             // Add connection to both doctor and patient
-            const doctorRef = doc(db, USERS_COLLECTION, request.doctorId);
-            await updateDoc(doctorRef, { connections: arrayUnion(request.patientId) });
+            const doctorRef = doc(db, USERS_COLLECTION, requestData.doctorId);
+            await updateDoc(doctorRef, { connections: arrayUnion(requestData.patientId) });
 
-            const patientRef = doc(db, USERS_COLLECTION, request.patientId);
-            await updateDoc(patientRef, { connections: arrayUnion(request.doctorId) });
+            const patientRef = doc(db, USERS_COLLECTION, requestData.patientId);
+            await updateDoc(patientRef, { connections: arrayUnion(requestData.doctorId) });
         }
         return { success: true };
     } catch (error) {
@@ -267,6 +270,9 @@ export const getConnectedPatients = async (doctorId: string): Promise<UserDocume
         }
 
         const patientIds = doctorDoc.connections;
+        if (patientIds.length === 0) {
+            return [];
+        }
         const patientsQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', patientIds));
         const querySnapshot = await getDocs(patientsQuery);
 
@@ -286,6 +292,9 @@ export const getConnectedDoctors = async (patientId: string): Promise<UserDocume
         }
 
         const doctorIds = patientDoc.connections;
+         if (doctorIds.length === 0) {
+            return [];
+        }
         const doctorsQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', doctorIds));
         const querySnapshot = await getDocs(doctorsQuery);
 
