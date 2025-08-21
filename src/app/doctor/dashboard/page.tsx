@@ -63,7 +63,7 @@ export default function DoctorDashboardPage() {
                                         <TableCell className="font-medium">{patient.email}</TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="outline" size="sm" asChild>
-                                                <Link href={`/share/${patient.uid}`} target="_blank">
+                                                <Link href={`/doctor/view-records/${patient.uid}`} target="_blank">
                                                     <Eye className="mr-2 h-4 w-4" /> View Records
                                                 </Link>
                                             </Button>

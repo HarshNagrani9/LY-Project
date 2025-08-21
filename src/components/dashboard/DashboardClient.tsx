@@ -7,16 +7,15 @@ import { HealthTimeline } from './HealthTimeline';
 import { AiAssistant } from './AiAssistant';
 import { HealthRecordForm } from './HealthRecordForm';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Share2, Loader2 } from 'lucide-react';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShareRecordDialog } from './ShareRecordDialog';
+import { ConnectionRequests } from './ConnectionRequests';
 
 export function DashboardClient() {
   const { user } = useAuth();
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const fetchRecords = useCallback(async () => {
     if (user) {
@@ -81,26 +80,7 @@ export function DashboardClient() {
       </div>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Actions</CardTitle>
-            <CardDescription>Quick actions for your records.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ShareRecordDialog
-              open={isShareOpen}
-              onOpenChange={setIsShareOpen}
-            >
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() => setIsShareOpen(true)}
-              >
-                <Share2 className="mr-2 h-4 w-4" /> Share Records with Doctor
-              </Button>
-            </ShareRecordDialog>
-          </CardContent>
-        </Card>
+        <ConnectionRequests />
         <AiAssistant records={records} />
       </div>
     </div>

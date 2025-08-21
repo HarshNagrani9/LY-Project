@@ -9,7 +9,7 @@ export interface UserDocument {
     email: string;
     role: 'patient' | 'doctor';
     createdAt: any;
-    connections?: string[]; // Array of patient UIDs for doctors
+    connections?: string[]; // Array of patient UIDs for doctors or doctor UIDs for patients
 }
 
 export interface HealthRecord {
@@ -20,4 +20,13 @@ export interface HealthRecord {
   content: string;
   date: string; 
   createdAt: string; 
+}
+
+export interface ConnectionRequest {
+    id: string;
+    doctorId: string;
+    doctorEmail: string;
+    patientId: string;
+    status: 'pending' | 'approved' | 'denied';
+    createdAt: string;
 }

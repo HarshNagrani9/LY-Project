@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { searchPatientsByEmail, connectDoctorToPatient } from '@/lib/actions';
+import { searchPatientsByEmail, requestPatientConnection } from '@/lib/actions';
 import type { UserDocument } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, UserPlus, CheckCircle, Users } from 'lucide-react';
+import { Loader2, Search, UserPlus, CheckCircle, Users, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { debounce } from 'lodash';
 
@@ -16,7 +16,7 @@ export default function FindPatientsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<UserDocument[]>([]);
     const [loading, setLoading] = useState(false);
-    const [connected, setConnected] = useState<string[]>([]);
+    const [requested, setRequested] = useState<string[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -45,15 +45,15 @@ export default function FindPatientsPage() {
         };
     }, [searchTerm, debouncedSearch]);
 
-    const handleConnect = async (patientId: string) => {
-        if (!user?.uid) return;
-        const result = await connectDoctorToPatient(user.uid, patientId);
+    const handleRequestConnection = async (patientId: string) => {
+        if (!user?.uid || !user.email) return;
+        const result = await requestPatientConnection(user.uid, user.email, patientId);
         if (result.success) {
             toast({
                 title: 'Success',
-                description: 'Patient connected successfully!',
+                description: 'Connection request sent successfully!',
             });
-            setConnected(prev => [...prev, patientId]);
+            setRequested(prev => [...prev, patientId]);
         } else {
             toast({
                 title: 'Error',
@@ -67,7 +67,7 @@ export default function FindPatientsPage() {
         <Card>
             <CardHeader>
                 <CardTitle>Find Patients</CardTitle>
-                <CardDescription>Search for patients by their exact email address to connect with them.</CardDescription>
+                <CardDescription>Search for patients by their exact email address to request access to their records.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-2 mb-6">
@@ -92,16 +92,16 @@ export default function FindPatientsPage() {
                                     <span className="font-medium">{patient.email}</span>
                                     <Button
                                         size="sm"
-                                        onClick={() => handleConnect(patient.uid)}
-                                        disabled={connected.includes(patient.uid)}
+                                        onClick={() => handleRequestConnection(patient.uid)}
+                                        disabled={requested.includes(patient.uid)}
                                     >
-                                        {connected.includes(patient.uid) ? (
+                                        {requested.includes(patient.uid) ? (
                                             <>
-                                                <CheckCircle className="mr-2" /> Connected
+                                                <CheckCircle className="mr-2" /> Requested
                                             </>
                                         ) : (
                                             <>
-                                                <UserPlus className="mr-2" /> Connect
+                                                <Send className="mr-2" /> Send Request
                                             </>
                                         )}
                                     </Button>
@@ -133,4 +133,3 @@ export default function FindPatientsPage() {
         </Card>
     );
 }
-

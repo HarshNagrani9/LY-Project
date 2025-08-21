@@ -1,12 +1,17 @@
 'use server';
 
-import { 
-  createShare, 
-  searchPatientsByEmail, 
-  connectDoctorToPatient as connect, 
-  getConnectedPatients as getPatients 
+import {
+  createShare,
+  searchPatientsByEmail,
+  createConnectionRequest,
+  getConnectedPatients as getPatients,
+  getPendingConnectionRequests as getRequests,
+  updateConnectionRequestStatus as updateRequest,
+  getHealthRecords,
+  getUserDocument,
 } from './firebase/firestore';
 import { headers } from 'next/headers';
+import { auth } from './firebase/config';
 
 export async function createShareLink(userId: string) {
   if (!userId) {
@@ -25,10 +30,33 @@ export async function createShareLink(userId: string) {
 
 export { searchPatientsByEmail };
 
-export async function connectDoctorToPatient(doctorId: string, patientId: string) {
-    return connect(doctorId, patientId);
+export async function requestPatientConnection(doctorId: string, doctorEmail:string, patientId: string) {
+    return createConnectionRequest(doctorId, doctorEmail, patientId);
 }
 
 export async function getConnectedPatients(doctorId: string) {
     return getPatients(doctorId);
+}
+
+export async function getPendingConnectionRequests(patientId: string) {
+    return getRequests(patientId);
+}
+
+export async function updateConnectionRequest(requestId: string, status: 'approved' | 'denied') {
+    return updateRequest(requestId, status);
+}
+
+export async function getPatientRecordsForDoctor(patientId: string) {
+    // Security check: ensure the current user (doctor) is connected to the patient
+    const doctorId = auth.currentUser?.uid;
+    if (!doctorId) {
+        throw new Error("Authentication error.");
+    }
+
+    const patientDoc = await getUserDocument(patientId);
+    if (!patientDoc?.connections?.includes(doctorId)) {
+        throw new Error("You do not have permission to view these records.");
+    }
+    
+    return getHealthRecords(patientId);
 }

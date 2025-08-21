@@ -15,16 +15,16 @@ import {
   documentId,
 } from 'firebase/firestore';
 import { db } from './config';
-import type { HealthRecord, UserDocument } from '@/lib/types';
+import type { HealthRecord, UserDocument, ConnectionRequest } from '@/lib/types';
 
 const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
 const SHARES_COLLECTION = 'shares';
+const CONNECTION_REQUESTS_COLLECTION = 'connectionRequests';
 
 const convertTimestamp = (data: any) => {
-    const createdAt = data.createdAt;
-    if (createdAt && typeof createdAt.toDate === 'function') {
-        data.createdAt = createdAt.toDate().toISOString();
+    if (data && data.createdAt && typeof data.createdAt.toDate === 'function') {
+        return { ...data, createdAt: data.createdAt.toDate().toISOString() };
     }
     return data;
 }
@@ -53,6 +53,7 @@ export const createUserDocument = async (userId: string, email: string, role: 'p
             email,
             role,
             createdAt: serverTimestamp(),
+            connections: [],
         });
     } catch (error) {
         console.error("Error creating user document:", error);
@@ -141,16 +142,10 @@ export const createShare = async (userId: string) => {
 // Get shared records by share ID
 export const getSharedRecords = async (shareId: string) => {
   try {
-    const shareDocRef = doc(db, SHARES_COLLECTION, shareId);
-    const shareDocSnap = await getDoc(shareDocRef);
-
-    if (!shareDocSnap.exists()) {
-      throw new Error('Share link not found or has expired.');
-    }
-
-    const { userId } = shareDocSnap.data();
-    const records = await getHealthRecords(userId);
-    return { records, userId };
+    // This function is now deprecated in favor of direct access for connected doctors.
+    // We will check for a patient ID directly.
+    const records = await getHealthRecords(shareId);
+    return { records, userId: shareId };
   } catch (error) {
     console.error('Error getting shared records: ', error);
     throw error;
@@ -174,17 +169,76 @@ export const searchPatientsByEmail = async (email: string): Promise<UserDocument
     }
 }
 
-// Add a patient to a doctor's connection list
-export const connectDoctorToPatient = async (doctorId: string, patientId: string) => {
+// Create a connection request from a doctor to a patient
+export const createConnectionRequest = async (doctorId: string, doctorEmail: string, patientId: string) => {
     try {
-        const doctorRef = doc(db, USERS_COLLECTION, doctorId);
-        await updateDoc(doctorRef, {
-            connections: arrayUnion(patientId)
+        // Check if a pending request already exists
+        const q = query(collection(db, CONNECTION_REQUESTS_COLLECTION),
+            where('doctorId', '==', doctorId),
+            where('patientId', '==', patientId),
+            where('status', '==', 'pending')
+        );
+        const existingRequest = await getDocs(q);
+        if (!existingRequest.isEmpty) {
+            return { success: false, error: "A connection request has already been sent." };
+        }
+
+        await addDoc(collection(db, CONNECTION_REQUESTS_COLLECTION), {
+            doctorId,
+            doctorEmail,
+            patientId,
+            status: 'pending',
+            createdAt: serverTimestamp(),
         });
         return { success: true };
     } catch (error) {
-        console.error("Error connecting doctor to patient:", error);
-        return { success: false, error: "Failed to connect." };
+        console.error("Error creating connection request:", error);
+        return { success: false, error: "Failed to send connection request." };
+    }
+}
+
+// Get pending connection requests for a patient
+export const getPendingConnectionRequests = async (patientId: string): Promise<ConnectionRequest[]> => {
+    try {
+        const q = query(collection(db, CONNECTION_REQUESTS_COLLECTION), 
+            where('patientId', '==', patientId),
+            where('status', '==', 'pending')
+        );
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...convertTimestamp(data),
+            } as ConnectionRequest;
+        });
+    } catch (error) {
+        console.error("Error fetching connection requests:", error);
+        return [];
+    }
+}
+
+// Update the status of a connection request
+export const updateConnectionRequestStatus = async (requestId: string, status: 'approved' | 'denied') => {
+    try {
+        const requestRef = doc(db, CONNECTION_REQUESTS_COLLECTION, requestId);
+        await updateDoc(requestRef, { status });
+
+        if (status === 'approved') {
+            const requestSnap = await getDoc(requestRef);
+            const request = requestSnap.data() as ConnectionRequest;
+            
+            // Add connection to both doctor and patient
+            const doctorRef = doc(db, USERS_COLLECTION, request.doctorId);
+            await updateDoc(doctorRef, { connections: arrayUnion(request.patientId) });
+
+            const patientRef = doc(db, USERS_COLLECTION, request.patientId);
+            await updateDoc(patientRef, { connections: arrayUnion(request.doctorId) });
+        }
+        return { success: true };
+    } catch (error) {
+        console.error(`Error updating connection request to ${status}:`, error);
+        return { success: false, error: "Failed to update connection request." };
     }
 }
 
@@ -203,6 +257,25 @@ export const getConnectedPatients = async (doctorId: string): Promise<UserDocume
         return querySnapshot.docs.map(doc => convertTimestamp(doc.data()) as UserDocument);
     } catch (error) {
         console.error("Error getting connected patients:", error);
+        return [];
+    }
+}
+
+// Get a patient's connected doctors
+export const getConnectedDoctors = async (patientId: string): Promise<UserDocument[]> => {
+    try {
+        const patientDoc = await getUserDocument(patientId);
+        if (!patientDoc || !patientDoc.connections || patientDoc.connections.length === 0) {
+            return [];
+        }
+
+        const doctorIds = patientDoc.connections;
+        const doctorsQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', doctorIds));
+        const querySnapshot = await getDocs(doctorsQuery);
+
+        return querySnapshot.docs.map(doc => convertTimestamp(doc.data()) as UserDocument);
+    } catch (error) {
+        console.error("Error getting connected doctors:", error);
         return [];
     }
 }
