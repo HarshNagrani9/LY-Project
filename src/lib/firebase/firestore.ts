@@ -155,15 +155,14 @@ export const getSharedRecords = async (shareId: string) => {
   }
 };
 
-// Search for patients by email
+// Search for patients by email (exact match)
 export const searchPatientsByEmail = async (email: string): Promise<UserDocument[]> => {
     if (!email) return [];
     try {
         const q = query(
             collection(db, USERS_COLLECTION),
             where('role', '==', 'patient'),
-            where('email', '>=', email),
-            where('email', '<=', email + '\uf8ff')
+            where('email', '==', email)
         );
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => doc.data() as UserDocument);

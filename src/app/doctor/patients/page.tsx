@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { searchPatientsByEmail, connectDoctorToPatient } from '@/lib/actions';
 import type { UserDocument } from '@/lib/types';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Search, UserPlus, CheckCircle, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { debounce } from 'lodash';
 
 export default function FindPatientsPage() {
     const { user } = useAuth();
@@ -18,12 +19,13 @@ export default function FindPatientsPage() {
     const [connected, setConnected] = useState<string[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
 
-    useEffect(() => {
-        const debounceSearch = setTimeout(async () => {
-            if (searchTerm.trim().length > 2) {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const debouncedSearch = useCallback(
+        debounce(async (term: string) => {
+            if (term.trim().length > 2) {
                 setLoading(true);
                 setHasSearched(true);
-                const foundPatients = await searchPatientsByEmail(searchTerm.trim());
+                const foundPatients = await searchPatientsByEmail(term.trim());
                 setResults(foundPatients);
                 setLoading(false);
             } else {
@@ -32,10 +34,16 @@ export default function FindPatientsPage() {
                     setHasSearched(false);
                 }
             }
-        }, 500); // 500ms delay
+        }, 500), // 500ms delay
+        []
+    );
 
-        return () => clearTimeout(debounceSearch);
-    }, [searchTerm, hasSearched]);
+    useEffect(() => {
+        debouncedSearch(searchTerm);
+        return () => {
+            debouncedSearch.cancel();
+        };
+    }, [searchTerm, debouncedSearch]);
 
     const handleConnect = async (patientId: string) => {
         if (!user?.uid) return;
@@ -59,14 +67,14 @@ export default function FindPatientsPage() {
         <Card>
             <CardHeader>
                 <CardTitle>Find Patients</CardTitle>
-                <CardDescription>Search for patients by their email address to connect with them.</CardDescription>
+                <CardDescription>Search for patients by their exact email address to connect with them.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-2 mb-6">
                      <div className="relative w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
-                            placeholder="patient@example.com"
+                            placeholder="Enter patient's full email address"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="flex-1 pl-10"
@@ -116,7 +124,7 @@ export default function FindPatientsPage() {
                             <Users className="mx-auto h-12 w-12 text-muted-foreground" />
                             <h3 className="text-lg font-semibold mt-4">Search for a patient</h3>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Enter a patient's email address above to get started.
+                                Enter a patient's full email address above to get started.
                             </p>
                         </div>
                     )}
@@ -125,3 +133,4 @@ export default function FindPatientsPage() {
         </Card>
     );
 }
+
