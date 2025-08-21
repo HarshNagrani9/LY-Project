@@ -21,19 +21,21 @@ const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
 const SHARES_COLLECTION = 'shares';
 
+const convertTimestamp = (data: any) => {
+    const createdAt = data.createdAt;
+    if (createdAt && typeof createdAt.toDate === 'function') {
+        data.createdAt = createdAt.toDate().toISOString();
+    }
+    return data;
+}
+
 // Get a user document
 export const getUserDocument = async (userId: string): Promise<UserDocument | null> => {
     try {
         const userRef = doc(db, USERS_COLLECTION, userId);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-            const data = userSnap.data();
-            // Convert timestamp to serializable format
-            const createdAt = data.createdAt;
-            if (createdAt && typeof createdAt.toDate === 'function') {
-                data.createdAt = createdAt.toDate().toISOString();
-            }
-            return data as UserDocument;
+            return convertTimestamp(userSnap.data()) as UserDocument;
         }
         return null;
     } catch (error) {
@@ -165,7 +167,7 @@ export const searchPatientsByEmail = async (email: string): Promise<UserDocument
             where('email', '==', email)
         );
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => doc.data() as UserDocument);
+        return querySnapshot.docs.map(doc => convertTimestamp(doc.data()) as UserDocument);
     } catch (error) {
         console.error("Error searching patients:", error);
         return [];
@@ -198,7 +200,7 @@ export const getConnectedPatients = async (doctorId: string): Promise<UserDocume
         const patientsQuery = query(collection(db, USERS_COLLECTION), where(documentId(), 'in', patientIds));
         const querySnapshot = await getDocs(patientsQuery);
 
-        return querySnapshot.docs.map(doc => doc.data() as UserDocument);
+        return querySnapshot.docs.map(doc => convertTimestamp(doc.data()) as UserDocument);
     } catch (error) {
         console.error("Error getting connected patients:", error);
         return [];
