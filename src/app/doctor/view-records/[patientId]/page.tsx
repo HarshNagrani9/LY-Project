@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { getPatientRecordsForDoctor } from '@/lib/actions';
 import type { HealthRecord } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,7 @@ const recordLabels: Record<HealthRecord['type'], string> = {
 
 export default function ViewPatientRecordsPage() {
   const params = useParams();
+  const { user, loading: authLoading } = useAuth();
   const patientId = params.patientId as string;
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,11 +34,11 @@ export default function ViewPatientRecordsPage() {
 
   useEffect(() => {
     const fetchRecords = async () => {
-        if (!patientId) return;
+        if (!patientId || !user?.uid) return;
       try {
         setLoading(true);
         setError(null);
-        const patientRecords = await getPatientRecordsForDoctor(patientId);
+        const patientRecords = await getPatientRecordsForDoctor(user.uid, patientId);
         setRecords(patientRecords);
       } catch (err: any) {
         setError(err.message || "Failed to fetch records.");
@@ -44,10 +46,12 @@ export default function ViewPatientRecordsPage() {
         setLoading(false);
       }
     };
-    fetchRecords();
-  }, [patientId]);
+    if (!authLoading) {
+        fetchRecords();
+    }
+  }, [patientId, user, authLoading]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

@@ -9,9 +9,9 @@ import {
   updateConnectionRequest as updateRequest,
   getHealthRecords,
   getUserDocument,
+  getConnectedDoctors,
 } from './firebase/firestore';
 import { headers } from 'next/headers';
-import { auth } from './firebase/config';
 import { revalidatePath } from 'next/cache';
 
 export async function createShareLink(userId: string) {
@@ -29,7 +29,7 @@ export async function createShareLink(userId: string) {
   }
 }
 
-export { searchPatientsByEmail };
+export { searchPatientsByEmail, getConnectedDoctors };
 
 export async function requestPatientConnection(doctorId: string, patientId: string) {
     const result = await createRequest(doctorId, patientId);
@@ -51,13 +51,13 @@ export async function updateConnectionRequest(patientId: string, doctorId: strin
     const result = await updateRequest(patientId, doctorId, status);
     if(result.success) {
         revalidatePath('/dashboard');
+        revalidatePath('/doctor/dashboard');
     }
     return result;
 }
 
-export async function getPatientRecordsForDoctor(patientId: string) {
+export async function getPatientRecordsForDoctor(doctorId: string, patientId: string) {
     // Security check: ensure the current user (doctor) is connected to the patient
-    const doctorId = auth.currentUser?.uid;
     if (!doctorId) {
         throw new Error("Authentication error. You must be logged in.");
     }
