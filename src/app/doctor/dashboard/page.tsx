@@ -6,7 +6,7 @@ import type { UserDocument } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, UserPlus, Eye } from 'lucide-react';
+import { Loader2, UserPlus, Eye, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DoctorDashboardPage() {
@@ -74,6 +74,7 @@ export default function DoctorDashboardPage() {
                         </Table>
                     ) : (
                          <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                            <Users className="mx-auto h-12 w-12 text-muted-foreground" />
                             <h3 className="text-lg font-semibold">No Patients Yet</h3>
                             <p className="text-sm text-muted-foreground mt-1">
                                 Click &quot;Find Patients&quot; to search for and connect with your patients.

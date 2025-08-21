@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function DoctorLayout({
   children,
@@ -71,6 +72,7 @@ export default function DoctorLayout({
 
   const getPageTitle = () => {
     if (pathname === '/doctor/dashboard') return 'Doctor Dashboard';
+    if (pathname === '/doctor/patients') return 'My Patients';
     return 'Dashboard';
   }
 
@@ -106,6 +108,9 @@ export default function DoctorLayout({
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
+          <div className="flex items-center justify-center mb-2">
+            <ThemeToggle />
+          </div>
           <div className="flex items-center gap-3 p-2 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center">
             <Avatar className="h-9 w-9">
               <AvatarImage src={user.photoURL ?? ''} />

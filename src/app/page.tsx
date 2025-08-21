@@ -10,6 +10,7 @@ import {
   BarChart,
 } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Home() {
   const features = [
@@ -59,7 +60,8 @@ export default function Home() {
             <Logo className="h-8 w-8" />
             <span className="font-bold text-lg">MediSafe</span>
           </Link>
-          <nav className="ml-auto flex items-center gap-2">
+          <nav className="ml-auto flex items-center gap-4">
+            <ThemeToggle />
             <Button variant="ghost" asChild>
               <Link href="/login">Login</Link>
             </Button>
@@ -92,7 +94,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-white">
+        <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-secondary/50 dark:bg-secondary/20">
           <div className="container px-4 md:px-6">
             <div className="mx-auto grid max-w-5xl items-center gap-6 lg:grid-cols-2 lg:gap-12">
               <div className="flex flex-col justify-center space-y-4">
