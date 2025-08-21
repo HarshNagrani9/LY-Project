@@ -47,8 +47,20 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
     // Convert Firestore Timestamps to serializable Date objects
     const records = querySnapshot.docs.map((doc) => {
       const data = doc.data();
-      const date = (data.date as Timestamp)?.toDate();
-      const createdAt = (data.createdAt as Timestamp)?.toDate();
+      // Handle both Timestamp objects and plain objects with seconds/nanoseconds
+      const getDate = (timestamp: any): Date | null => {
+        if (!timestamp) return null;
+        if (timestamp instanceof Timestamp) {
+            return timestamp.toDate();
+        }
+        if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+            return new Timestamp(timestamp.seconds, timestamp.nanoseconds).toDate();
+        }
+        return null;
+      }
+      const date = getDate(data.date);
+      const createdAt = getDate(data.createdAt);
+      
       return {
         id: doc.id,
         ...data,
