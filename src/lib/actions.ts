@@ -1,6 +1,11 @@
 'use server';
 
-import { createShare, searchPatientsByEmail as searchPatients, connectDoctorToPatient as connect, getConnectedPatients as getPatients } from './firebase/firestore';
+import { 
+  createShare, 
+  searchPatientsByEmail, 
+  connectDoctorToPatient as connect, 
+  getConnectedPatients as getPatients 
+} from './firebase/firestore';
 import { headers } from 'next/headers';
 
 export async function createShareLink(userId: string) {
@@ -18,9 +23,7 @@ export async function createShareLink(userId: string) {
   }
 }
 
-export async function searchPatients(email: string) {
-    return searchPatients(email);
-}
+export { searchPatientsByEmail };
 
 export async function connectDoctorToPatient(doctorId: string, patientId: string) {
     return connect(doctorId, patientId);
