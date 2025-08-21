@@ -20,6 +20,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { getUserDocument } from '@/lib/firebase/firestore';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -44,12 +45,22 @@ export function LoginForm() {
     setIsLoading(true);
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+      
+      const userDoc = await getUserDocument(user.uid);
+      
       toast({
         title: 'Login Successful',
-        description: "Welcome back! You're being redirected to your dashboard.",
+        description: "Welcome back! You're being redirected.",
       });
-      router.push('/dashboard');
+
+      if (userDoc?.role === 'doctor') {
+        router.push('/doctor/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
+
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
       setIsLoading(false);

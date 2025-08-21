@@ -12,11 +12,26 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from './config';
-import type { HealthRecord } from '@/lib/types';
+import type { HealthRecord, UserDocument } from '@/lib/types';
 
 const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
 const SHARES_COLLECTION = 'shares';
+
+// Get a user document
+export const getUserDocument = async (userId: string): Promise<UserDocument | null> => {
+    try {
+        const userRef = doc(db, USERS_COLLECTION, userId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            return userSnap.data() as UserDocument;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching user document:", error);
+        throw new Error('Failed to fetch user document.');
+    }
+}
 
 // Create a user document
 export const createUserDocument = async (userId: string, email: string, role: 'patient' | 'doctor') => {

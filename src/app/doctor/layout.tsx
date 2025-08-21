@@ -22,13 +22,13 @@ import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard,
   LogOut,
-  HeartPulse,
+  Users,
   Loader2,
 } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { useToast } from '@/hooks/use-toast';
 
-export default function DashboardLayout({
+export default function DoctorLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -41,11 +41,10 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/login');
-    } else if (!loading && user?.role === 'doctor') {
-      router.replace('/doctor/dashboard');
+    } else if (!loading && user?.role === 'patient') {
+      router.replace('/dashboard');
     }
   }, [loading, user, router]);
-
 
   const handleSignOut = async () => {
     try {
@@ -57,7 +56,7 @@ export default function DashboardLayout({
     }
   };
 
-  if (loading || !user || user.role !== 'patient') {
+  if (loading || !user || user.role !== 'doctor') {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -66,13 +65,12 @@ export default function DashboardLayout({
   }
 
   const getInitials = (email: string | null) => {
-    if (!email) return 'U';
+    if (!email) return 'D';
     return email.substring(0, 2).toUpperCase();
   };
 
   const getPageTitle = () => {
-    if (pathname === '/dashboard') return 'Dashboard';
-    if (pathname === '/dashboard/my-records') return 'My Records';
+    if (pathname === '/doctor/dashboard') return 'Doctor Dashboard';
     return 'Dashboard';
   }
 
@@ -80,28 +78,28 @@ export default function DashboardLayout({
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/doctor/dashboard" className="flex items-center gap-2">
             <Logo className="w-8 h-8" />
             <span className="font-bold text-xl group-data-[collapsible=icon]:hidden">
-              MediSafe
+              MediSafe (Doctor)
             </span>
           </Link>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/dashboard'}>
-                <Link href="/dashboard">
+              <SidebarMenuButton asChild tooltip="Dashboard" isActive={pathname === '/doctor/dashboard'}>
+                <Link href="/doctor/dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="My Records" isActive={pathname === '/dashboard/my-records'}>
-                <Link href="/dashboard/my-records">
-                  <HeartPulse />
-                  <span>My Records</span>
+              <SidebarMenuButton asChild tooltip="My Patients" isActive={pathname === '/doctor/patients'}>
+                <Link href="/doctor/patients">
+                  <Users />
+                  <span>My Patients</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -114,9 +112,10 @@ export default function DashboardLayout({
               <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-medium truncate">
-                {user.email}
-              </span>
+                <span className="text-xs text-muted-foreground">Doctor</span>
+                <span className="text-sm font-medium truncate">
+                    {user.email}
+                </span>
             </div>
           </div>
           <Button
