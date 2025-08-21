@@ -35,7 +35,12 @@ export const getUserDocument = async (userId: string): Promise<UserDocument | nu
         const userRef = doc(db, USERS_COLLECTION, userId);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-            return convertTimestamp(userSnap.data()) as UserDocument;
+            const data = userSnap.data();
+            // Ensure createdAt is converted if it exists
+            if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+                return { ...data, createdAt: data.createdAt.toDate().toISOString() } as UserDocument;
+            }
+            return data as UserDocument;
         }
         return null;
     } catch (error) {

@@ -50,13 +50,21 @@ export async function getPatientRecordsForDoctor(patientId: string) {
     // Security check: ensure the current user (doctor) is connected to the patient
     const doctorId = auth.currentUser?.uid;
     if (!doctorId) {
-        throw new Error("Authentication error.");
+        throw new Error("Authentication error. You must be logged in.");
     }
 
     const patientDoc = await getUserDocument(patientId);
-    if (!patientDoc?.connections?.includes(doctorId)) {
+
+    // Ensure the patient document exists and has a connections array
+    if (!patientDoc || !Array.isArray(patientDoc.connections)) {
+        throw new Error("Patient data not found or is invalid.");
+    }
+
+    // Check if the doctor's ID is in the patient's connections list
+    if (!patientDoc.connections.includes(doctorId)) {
         throw new Error("You do not have permission to view these records.");
     }
     
+    // If permission is granted, fetch the records
     return getHealthRecords(patientId);
 }

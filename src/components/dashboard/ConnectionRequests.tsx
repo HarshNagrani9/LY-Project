@@ -5,7 +5,7 @@ import { getPendingConnectionRequests, updateConnectionRequest } from '@/lib/act
 import type { ConnectionRequest } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Check, X, MailQuestion, BellOff } from 'lucide-react';
+import { Loader2, Check, X, BellOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function ConnectionRequests() {
