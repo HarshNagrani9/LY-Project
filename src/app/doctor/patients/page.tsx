@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { searchPatientsByEmail, connectDoctorToPatient } from '@/lib/actions';
 import type { UserDocument } from '@/lib/types';
@@ -16,15 +16,26 @@ export default function FindPatientsPage() {
     const [results, setResults] = useState<UserDocument[]>([]);
     const [loading, setLoading] = useState(false);
     const [connected, setConnected] = useState<string[]>([]);
+    const [hasSearched, setHasSearched] = useState(false);
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchTerm.trim()) return;
-        setLoading(true);
-        const foundPatients = await searchPatientsByEmail(searchTerm.trim());
-        setResults(foundPatients);
-        setLoading(false);
-    };
+    useEffect(() => {
+        const debounceSearch = setTimeout(async () => {
+            if (searchTerm.trim().length > 2) {
+                setLoading(true);
+                setHasSearched(true);
+                const foundPatients = await searchPatientsByEmail(searchTerm.trim());
+                setResults(foundPatients);
+                setLoading(false);
+            } else {
+                setResults([]);
+                if (hasSearched) {
+                    setHasSearched(false);
+                }
+            }
+        }, 500); // 500ms delay
+
+        return () => clearTimeout(debounceSearch);
+    }, [searchTerm, hasSearched]);
 
     const handleConnect = async (patientId: string) => {
         if (!user?.uid) return;
@@ -51,21 +62,21 @@ export default function FindPatientsPage() {
                 <CardDescription>Search for patients by their email address to connect with them.</CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSearch} className="flex items-center gap-2 mb-6">
-                    <Input
-                        placeholder="patient@example.com"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="flex-1"
-                    />
-                    <Button type="submit" disabled={loading}>
-                        {loading ? <Loader2 className="animate-spin" /> : <Search />}
-                        <span className="ml-2 hidden sm:inline">Search</span>
-                    </Button>
-                </form>
+                <div className="flex items-center gap-2 mb-6">
+                     <div className="relative w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            placeholder="patient@example.com"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="flex-1 pl-10"
+                        />
+                    </div>
+                </div>
 
                 <div className="space-y-4">
                     {loading && <div className="flex justify-center"><Loader2 className="animate-spin" /></div>}
+                    
                     {!loading && results.length > 0 && (
                         <ul className="divide-y border rounded-md">
                             {results.map((patient) => (
@@ -90,7 +101,8 @@ export default function FindPatientsPage() {
                             ))}
                         </ul>
                     )}
-                     {!loading && results.length === 0 && searchTerm && (
+
+                     {!loading && results.length === 0 && hasSearched && (
                          <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <h3 className="text-lg font-semibold">No Patients Found</h3>
                             <p className="text-sm text-muted-foreground mt-1">
@@ -98,7 +110,8 @@ export default function FindPatientsPage() {
                             </p>
                         </div>
                     )}
-                     {!loading && results.length === 0 && !searchTerm && (
+
+                     {!loading && !hasSearched && (
                          <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <Users className="mx-auto h-12 w-12 text-muted-foreground" />
                             <h3 className="text-lg font-semibold mt-4">Search for a patient</h3>
