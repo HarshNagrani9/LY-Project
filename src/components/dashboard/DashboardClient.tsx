@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { getHealthRecords } from '@/lib/firebase/firestore';
 import type { HealthRecord } from '@/lib/types';
@@ -18,18 +18,27 @@ export function DashboardClient() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
 
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     if (user) {
       setLoading(true);
-      const userRecords = await getHealthRecords(user.uid);
-      setRecords(userRecords);
-      setLoading(false);
+      try {
+        const userRecords = await getHealthRecords(user.uid);
+        setRecords(userRecords);
+      } catch (error) {
+        console.error("Failed to fetch health records:", error);
+        // Optionally, show a toast message to the user
+      } finally {
+        setLoading(false);
+      }
+    } else {
+        // If there's no user, we are not loading anything.
+        setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchRecords();
-  }, [user]);
+  }, [fetchRecords]);
 
   const handleRecordAdded = () => {
     fetchRecords();
