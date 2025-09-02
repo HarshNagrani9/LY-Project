@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,7 +89,7 @@ export default function Home() {
             <HeartPulse className="absolute bottom-1/4 right-1/4 h-16 w-16 text-primary/40 animate-float-down-2 opacity-60" />
             <FileText className="absolute top-1/3 right-1/3 h-8 w-8 text-primary/20 animate-float-up-1 opacity-40" />
 
-            <div className="container px-4 md:px-6 text-center">
+            <div className="container mx-auto px-4 md:px-6 text-center">
                 <div className="flex flex-col items-center space-y-6">
                     <div className="space-y-4">
                         <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none font-headline bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
