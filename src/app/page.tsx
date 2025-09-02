@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,10 +8,13 @@ import {
   Upload,
   BarChart,
   ArrowRight,
+  ShieldCheck,
+  FileText,
+  HeartPulse,
 } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import Image from 'next/image';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Home() {
   const features = [
@@ -20,61 +22,49 @@ export default function Home() {
       icon: <Upload className="h-8 w-8 text-primary" />,
       title: 'Unified Health Records',
       description:
-        'Securely upload and manage all your medical records, prescriptions, and lab reports in one place.',
-      image: 'https://picsum.photos/800/600?random=1',
-      imageHint: 'medical chart'
+        'Securely upload and manage all your medical records in one place.',
     },
     {
-      icon: <Lock className="h-8 w-8 text-primary" />,
+      icon: <ShieldCheck className="h-8 w-8 text-primary" />,
       title: 'Blockchain Security',
       description:
-        'Leverage the power of blockchain for immutable, patient-owned health data with consent-based sharing.',
-      image: 'https://picsum.photos/800/600?random=2',
-      imageHint: 'security technology'
+        'Leverage immutable, patient-owned health data with consent-based sharing.',
     },
     {
       icon: <Bot className="h-8 w-8 text-primary" />,
       title: 'AI Health Assistant',
       description:
-        'Get personalized health insights, allergy alerts, and lifestyle recommendations from our intelligent AI.',
-      image: 'https://picsum.photos/800/600?random=3',
-      imageHint: 'artificial intelligence'
+        'Get personalized health insights and lifestyle recommendations from our AI.',
     },
     {
       icon: <Share2 className="h-8 w-8 text-primary" />,
       title: 'Seamless Sharing',
       description:
-        'Share your medical history with doctors via secure, time-bound links for better-coordinated care.',
-      image: 'https://picsum.photos/800/600?random=4',
-      imageHint: 'data sharing'
+        'Grant doctors access to your medical history via secure connections.',
     },
     {
       icon: <BarChart className="h-8 w-8 text-primary" />,
       title: 'Health Analytics',
       description:
-        'Visualize your health trends for metrics like blood pressure, sugar, and BMI with our intuitive dashboard.',
-      image: 'https://picsum.photos/800/600?random=5',
-      imageHint: 'analytics dashboard'
+        'Visualize your health trends with our intuitive dashboard.',
     },
     {
       icon: <Stethoscope className="h-8 w-8 text-primary" />,
       title: 'Doctor Coordination',
       description:
-        'Enable doctors to view your history, add prescriptions, and get AI summaries for faster, accurate diagnoses.',
-      image: 'https://picsum.photos/800/600?random=6',
-      imageHint: 'doctor patient'
+        'Enable doctors to view your history and get AI summaries for faster diagnoses.',
     },
   ];
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center">
+       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 max-w-7xl items-center">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8" />
             <span className="font-bold text-lg">MediSafe</span>
           </Link>
-          <nav className="ml-auto flex items-center gap-4">
+          <nav className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <Button variant="ghost" asChild>
               <Link href="/login">Login</Link>
@@ -87,28 +77,31 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <section className="relative w-full h-[80vh] flex items-center justify-center text-center">
-             <Image
-                src="https://picsum.photos/1920/1080?random=hero"
-                alt="Hero background"
-                fill
-                className="object-cover -z-10 brightness-50"
-                data-ai-hint="health technology"
-            />
-            <div className="container px-4 md:px-6 text-white">
+        <section className="relative w-full py-24 lg:py-32 xl:py-40">
+           <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(39,39,42,0.6),rgba(255,255,255,0))]"></div>
+            
+            <div className="absolute top-20 left-10 w-20 h-20 bg-primary/20 rounded-full animate-float-up-1 blur-md"></div>
+            <div className="absolute top-1/2 right-10 w-24 h-24 bg-accent/30 rounded-full animate-float-down-1 blur-lg"></div>
+            <div className="absolute bottom-10 left-1/2 w-16 h-16 bg-primary/10 rounded-full animate-float-up-2 blur-md"></div>
+
+            <Stethoscope className="absolute top-1/4 left-1/4 h-12 w-12 text-primary/30 animate-float-up-2 opacity-50" />
+            <HeartPulse className="absolute bottom-1/4 right-1/4 h-16 w-16 text-primary/40 animate-float-down-2 opacity-60" />
+            <FileText className="absolute top-1/3 right-1/3 h-8 w-8 text-primary/20 animate-float-up-1 opacity-40" />
+
+            <div className="container px-4 md:px-6 text-center">
                 <div className="flex flex-col items-center space-y-6">
                     <div className="space-y-4">
-                        <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none font-headline">
-                        Your Health, Your Control.
+                        <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none font-headline bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
+                            Your Health, Your Control.
                         </h1>
-                        <p className="mx-auto max-w-[700px] text-lg text-white/80 md:text-xl">
-                        A decentralized, AI-powered health record system that puts you
-                        in charge of your medical data. Secure, smart, and simple.
+                        <p className="mx-auto max-w-[700px] text-lg text-muted-foreground md:text-xl">
+                            A decentralized, AI-powered health record system that puts you
+                            in charge of your medical data. Secure, smart, and simple.
                         </p>
                     </div>
-                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Button asChild size="lg">
                         <Link href="/signup">
-                        Join MediSafe Today <ArrowRight className="ml-2" />
+                        Create Your Secure Vault <ArrowRight className="ml-2" />
                         </Link>
                     </Button>
                 </div>
@@ -116,10 +109,10 @@ export default function Home() {
         </section>
 
 
-        <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-background">
+        <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-secondary/50 dark:bg-background">
             <div className="container px-4 md:px-6">
                  <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
-                    <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">
+                    <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm font-medium">
                         Key Features
                     </div>
                     <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
@@ -127,41 +120,31 @@ export default function Home() {
                     </h2>
                     <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                         MediSafe combines cutting-edge technology to provide a
-                        comprehensive solution for personal health management, ensuring your data is secure, accessible, and insightful.
+                        comprehensive solution for personal health management.
                     </p>
                 </div>
-                <div className="mx-auto grid max-w-7xl items-start gap-12">
-                    {features.map((feature, index) => (
-                        <div key={feature.title} className={`grid gap-10 md:grid-cols-2 md:items-center ${index % 2 !== 0 ? 'md:grid-flow-col-dense' : ''}`}>
-                             <div className={`space-y-4 ${index % 2 !== 0 ? 'md:col-start-2' : ''}`}>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                        {feature.icon}
-                                    </div>
-                                    <h3 className="text-2xl font-bold">{feature.title}</h3>
+                <div className="mx-auto grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl">
+                    {features.map((feature) => (
+                        <Card key={feature.title} className="flex flex-col items-center text-center p-6 border-2 border-transparent hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+                           <CardHeader className="p-0 mb-4">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
+                                    {feature.icon}
                                 </div>
-                                <p className="text-muted-foreground text-lg">
+                                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                           </CardHeader>
+                           <CardContent className="p-0">
+                               <p className="text-muted-foreground">
                                     {feature.description}
                                 </p>
-                             </div>
-                             <div className={`flex justify-center ${index % 2 !== 0 ? 'md:col-start-1' : ''}`}>
-                                <Image
-                                    src={feature.image}
-                                    alt={feature.title}
-                                    width={550}
-                                    height={412}
-                                    className="rounded-xl shadow-2xl"
-                                    data-ai-hint={feature.imageHint}
-                                />
-                             </div>
-                        </div>
+                           </CardContent>
+                        </Card>
                     ))}
                 </div>
             </div>
         </section>
       </main>
 
-      <footer className="border-t bg-secondary/50">
+      <footer className="border-t bg-background">
         <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
           <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
              <Logo className="h-8 w-8" />

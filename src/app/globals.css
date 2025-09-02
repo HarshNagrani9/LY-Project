@@ -87,3 +87,26 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes float-up-1 {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-25px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+  }
+  @keyframes float-down-1 {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(25px) rotate(-5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+  }
+  @keyframes float-up-2 {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(-5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+  }
+  @keyframes float-down-2 {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(15px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+  }
+}
