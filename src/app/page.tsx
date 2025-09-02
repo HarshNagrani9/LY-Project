@@ -59,7 +59,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-7xl items-center">
+        <div className="container flex h-16 max-w-7xl items-center mx-auto">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8" />
             <span className="font-bold text-lg">MediSafe</span>
@@ -110,7 +110,7 @@ export default function Home() {
 
 
         <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-secondary/50 dark:bg-background">
-            <div className="container px-4 md:px-6">
+            <div className="container px-4 md:px-6 mx-auto">
                  <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
                     <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm font-medium">
                         Key Features
@@ -145,7 +145,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t bg-background">
-        <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
+        <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0 mx-auto">
           <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
              <Logo className="h-8 w-8" />
              <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
