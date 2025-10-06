@@ -7,9 +7,8 @@ import type { HealthRecord, UserDocument } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/icons/Logo';
-import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight, Link as LinkIcon } from 'lucide-react';
+import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight, Link as LinkIcon, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
-import { RecordAiAnalysis } from '@/components/dashboard/RecordAiAnalysis';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -134,58 +133,63 @@ export default function ViewPatientRecordsPage() {
 
           <main className="space-y-6">
             {records.map((record) => (
-              <Card key={record.id}>
-                <CardHeader className="flex flex-row items-start gap-4">
-                  <div className="p-2 bg-background rounded-full mt-1">{recordIcons[record.type]}</div>
-                   <div className='flex-1'>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{record.title}</CardTitle>
-                        <Badge variant="default">{recordLabels[record.type]}</Badge>
-                    </div>
-                    <CardDescription>
-                        {format(new Date(record.date), 'MMMM d, yyyy')}
-                    </CardDescription>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                   {(record.bloodPressure || record.pulseRate) && (
-                    <div className="mb-4 grid grid-cols-2 gap-4">
-                        {record.bloodPressure && (
-                        <div className="flex items-center gap-2 p-2 bg-background rounded-lg">
-                            <Heart className="h-5 w-5 text-red-500" />
-                            <div>
-                            <p className="text-xs text-muted-foreground">Blood Pressure</p>
-                            <p className="font-semibold text-sm">{record.bloodPressure}</p>
+              <Link href={`/doctor/diagnose/${record.id}`} key={record.id} className="block group">
+                <Card className="transition-all duration-200 group-hover:shadow-lg group-hover:border-primary">
+                    <CardHeader className="flex flex-row items-start gap-4">
+                    <div className="p-2 bg-background rounded-full mt-1">{recordIcons[record.type]}</div>
+                    <div className='flex-1'>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg">{record.title}</CardTitle>
+                            <Badge variant={record.diagnosis ? 'default' : 'outline'}>{record.diagnosis ? 'Diagnosed' : recordLabels[record.type]}</Badge>
+                        </div>
+                        <CardDescription>
+                            {format(new Date(record.date), 'MMMM d, yyyy')}
+                        </CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                    {(record.bloodPressure || record.pulseRate) && (
+                        <div className="mb-4 grid grid-cols-2 gap-4">
+                            {record.bloodPressure && (
+                            <div className="flex items-center gap-2 p-2 bg-background rounded-lg">
+                                <Heart className="h-5 w-5 text-red-500" />
+                                <div>
+                                <p className="text-xs text-muted-foreground">Blood Pressure</p>
+                                <p className="font-semibold text-sm">{record.bloodPressure}</p>
+                                </div>
                             </div>
+                            )}
+                            {record.pulseRate && (
+                            <div className="flex items-center gap-2 p-2 bg-background rounded-lg">
+                                <Activity className="h-5 w-5 text-blue-500" />
+                                <div>
+                                <p className="text-xs text-muted-foreground">Pulse Rate</p>
+                                <p className="font-semibold text-sm">{record.pulseRate} <span className='text-xs'>BPM</span></p>
+                                </div>
+                            </div>
+                            )}
                         </div>
                         )}
-                        {record.pulseRate && (
-                        <div className="flex items-center gap-2 p-2 bg-background rounded-lg">
-                            <Activity className="h-5 w-5 text-blue-500" />
-                            <div>
-                            <p className="text-xs text-muted-foreground">Pulse Rate</p>
-                            <p className="font-semibold text-sm">{record.pulseRate} <span className='text-xs'>BPM</span></p>
-                            </div>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
+                    {record.attachmentUrl && (
+                        <div className="mt-4">
+                            <Button asChild variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                            <a href={record.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                <LinkIcon className="mr-2 h-4 w-4" />
+                                View Attachment
+                            </a>
+                            </Button>
                         </div>
                         )}
-                    </div>
-                    )}
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
-                  {record.attachmentUrl && (
-                    <div className="mt-4">
-                        <Button asChild variant="outline" size="sm">
-                        <Link href={record.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                            <LinkIcon className="mr-2 h-4 w-4" />
-                            View Attachment
-                        </Link>
-                        </Button>
-                    </div>
-                    )}
-                </CardContent>
-                <CardFooter>
-                    <RecordAiAnalysis record={record} user={patient as any} />
-                </CardFooter>
-              </Card>
+                    </CardContent>
+                    <CardFooter>
+                       <Button variant="outline" className="w-full">
+                         <Pencil className="mr-2" />
+                         {record.diagnosis ? 'Edit Diagnosis' : 'Add Diagnosis'}
+                       </Button>
+                    </CardFooter>
+                </Card>
+              </Link>
             ))}
              {records.length === 0 && (
                 <Card>

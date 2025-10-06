@@ -16,12 +16,43 @@ import {
   arrayRemove,
 } from 'firebase/firestore';
 import { db } from './config';
-import type { HealthRecord, UserDocument } from '@/lib/types';
+import type { HealthRecord, UserDocument, Diagnosis } from '@/lib/types';
 import { uploadFile } from './storage';
 
 const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
 const SHARES_COLLECTION = 'shares';
+
+const convertRecordTimestamps = (data: any): any => {
+    const getDate = (timestamp: any): Date | null => {
+        if (!timestamp) return null;
+        if (timestamp instanceof Timestamp) {
+            return timestamp.toDate();
+        }
+        if (typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
+            return new Timestamp(timestamp.seconds, timestamp.nanoseconds).toDate();
+        }
+        const d = new Date(timestamp);
+        if (!isNaN(d.getTime())) {
+          return d;
+        }
+        return null;
+      }
+      const date = getDate(data.date);
+      const createdAt = getDate(data.createdAt);
+      
+      const diagnosis = data.diagnosis ? {
+          ...data.diagnosis,
+          createdAt: getDate(data.diagnosis.createdAt)?.toISOString() ?? new Date().toISOString(),
+      } : undefined;
+
+      return {
+        ...data,
+        date: date ? date.toISOString() : new Date().toISOString(),
+        createdAt: createdAt ? createdAt.toISOString() : new Date().toISOString(),
+        diagnosis,
+      } as unknown as HealthRecord;
+}
 
 const convertTimestamp = (data: any) => {
     if (data && data.createdAt && typeof data.createdAt.toDate === 'function') {
@@ -106,6 +137,25 @@ export const addHealthRecord = async (
   }
 };
 
+// Get a single health record
+export const getHealthRecord = async (recordId: string): Promise<HealthRecord | null> => {
+    try {
+        const recordRef = doc(db, HEALTH_RECORDS_COLLECTION, recordId);
+        const recordSnap = await getDoc(recordRef);
+        if (!recordSnap.exists()) {
+            return null;
+        }
+        const data = recordSnap.data();
+        return {
+            id: recordSnap.id,
+            ...convertRecordTimestamps(data),
+        } as HealthRecord;
+    } catch (error) {
+        console.error('Error getting health record: ', error);
+        throw new Error('Failed to fetch health record.');
+    }
+}
+
 // Get all health records for a user
 export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> => {
   try {
@@ -117,29 +167,10 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
     
     const records = querySnapshot.docs.map((doc) => {
       const data = doc.data();
-      const getDate = (timestamp: any): Date | null => {
-        if (!timestamp) return null;
-        if (timestamp instanceof Timestamp) {
-            return timestamp.toDate();
-        }
-        if (typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
-            return new Timestamp(timestamp.seconds, timestamp.nanoseconds).toDate();
-        }
-        const d = new Date(timestamp);
-        if (!isNaN(d.getTime())) {
-          return d;
-        }
-        return null;
-      }
-      const date = getDate(data.date);
-      const createdAt = getDate(data.createdAt);
-      
       return {
         id: doc.id,
-        ...data,
-        date: date ? date.toISOString() : new Date().toISOString(),
-        createdAt: createdAt ? createdAt.toISOString() : new Date().toISOString(),
-      } as unknown as HealthRecord;
+        ...convertRecordTimestamps(data),
+      } as HealthRecord;
     });
 
     return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -333,3 +364,18 @@ export const getConnectedDoctors = async (patientId: string): Promise<UserDocume
         return [];
     }
 }
+
+export const addDiagnosisToRecord = async (recordId: string, diagnosis: Omit<Diagnosis, 'createdAt'>) => {
+    try {
+        const recordRef = doc(db, HEALTH_RECORDS_COLLECTION, recordId);
+        const diagnosisWithTimestamp = {
+            ...diagnosis,
+            createdAt: serverTimestamp(),
+        };
+        await updateDoc(recordRef, { diagnosis: diagnosisWithTimestamp });
+        return { success: true };
+    } catch (error) {
+        console.error("Error adding diagnosis:", error);
+        return { success: false, error: "Failed to add diagnosis." };
+    }
+};

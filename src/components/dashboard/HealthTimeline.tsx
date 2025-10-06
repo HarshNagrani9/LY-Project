@@ -15,6 +15,8 @@ import { format } from 'date-fns';
 import { RecordAiAnalysis } from './RecordAiAnalysis';
 import { Button } from '../ui/button';
 import Link from 'next/link';
+import { ViewDiagnosisDialog } from './ViewDiagnosisDialog';
+import { useState } from 'react';
 
 interface HealthTimelineProps {
   records: HealthRecord[];
@@ -36,6 +38,14 @@ const recordLabels: Record<HealthRecord['type'], string> = {
 };
 
 export function HealthTimeline({ records, user }: HealthTimelineProps) {
+  const [isDiagnosisOpen, setIsDiagnosisOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<HealthRecord | null>(null);
+
+  const handleOpenDiagnosis = (record: HealthRecord) => {
+    setSelectedRecord(record);
+    setIsDiagnosisOpen(true);
+  }
+
   if (records.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-12 px-4 border-2 border-dashed rounded-lg">
@@ -103,11 +113,27 @@ export function HealthTimeline({ records, user }: HealthTimelineProps) {
               </div>
             )}
           </CardContent>
-           <CardFooter>
+           <CardFooter className="flex flex-col items-start gap-2">
+            {record.diagnosis && (
+              <Button 
+                variant="secondary" 
+                className="w-full"
+                onClick={() => handleOpenDiagnosis(record)}
+              >
+                <Stethoscope className="mr-2" /> View Doctor&apos;s Diagnosis
+              </Button>
+            )}
             <RecordAiAnalysis record={record} user={user} />
           </CardFooter>
         </Card>
       ))}
+      {selectedRecord && selectedRecord.diagnosis && (
+        <ViewDiagnosisDialog 
+          open={isDiagnosisOpen}
+          onOpenChange={setIsDiagnosisOpen}
+          diagnosis={selectedRecord.diagnosis}
+        />
+      )}
     </div>
   );
 }

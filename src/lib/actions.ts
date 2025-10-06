@@ -10,9 +10,12 @@ import {
   getHealthRecords,
   getUserDocument as getUser,
   getConnectedDoctors,
+  getHealthRecord,
+  addDiagnosisToRecord as addDiagnosis,
 } from './firebase/firestore';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import type { Diagnosis } from './types';
 
 export async function createShareLink(userId: string) {
   if (!userId) {
@@ -29,7 +32,7 @@ export async function createShareLink(userId: string) {
   }
 }
 
-export { searchPatientsByEmail, getConnectedDoctors, getUser as getUserDocument };
+export { searchPatientsByEmail, getConnectedDoctors, getUserDocument, getHealthRecord };
 
 export async function requestPatientConnection(doctorId: string, patientId: string) {
     const result = await createRequest(doctorId, patientId);
@@ -55,6 +58,49 @@ export async function updateConnectionRequest(patientId: string, doctorId: strin
     }
     return result;
 }
+
+export async function getPatientRecordForDoctor(doctorId: string, recordId: string) {
+    const record = await getHealthRecord(recordId);
+    if (!record) {
+        throw new Error("Record not found.");
+    }
+    // Security check
+    const doctorDoc = await getUser(doctorId);
+    if (!doctorDoc || !doctorDoc.successfulConnections?.includes(record.userId)) {
+        throw new Error("You do not have permission to view this record.");
+    }
+    return record;
+}
+
+
+export async function addDiagnosisToRecord(doctorId: string, recordId: string, diagnosisData: Omit<Diagnosis, 'doctorId' | 'doctorEmail' | 'createdAt'>) {
+    const record = await getHealthRecord(recordId);
+    if (!record) {
+        return { success: false, error: "Record not found." };
+    }
+    const doctor = await getUser(doctorId);
+    if (!doctor) {
+        return { success: false, error: "Doctor not found." };
+    }
+     // Security check
+    if (!doctor.successfulConnections?.includes(record.userId)) {
+        return { success: false, error: "You are not connected with this patient." };
+    }
+
+    const diagnosis: Omit<Diagnosis, 'createdAt'> = {
+        ...diagnosisData,
+        doctorId: doctor.uid,
+        doctorEmail: doctor.email,
+    };
+
+    const result = await addDiagnosis(recordId, diagnosis);
+    if(result.success) {
+        revalidatePath(`/doctor/view-records/${record.userId}`);
+        revalidatePath(`/dashboard`);
+    }
+    return result;
+}
+
 
 export async function getPatientRecordsForDoctor(doctorId: string, patientId: string) {
     // Security check: ensure the current user (doctor) is connected to the patient

@@ -22,6 +22,15 @@ export interface UserDocument {
     bmi?: number;
 }
 
+export interface Diagnosis {
+  doctorId: string;
+  doctorEmail: string;
+  diagnosisText: string;
+  treatmentPlan: string;
+  recommendations: string;
+  createdAt: string;
+}
+
 export interface HealthRecord {
   id: string;
   userId: string;
@@ -33,6 +42,7 @@ export interface HealthRecord {
   bloodPressure?: string;
   pulseRate?: number;
   attachmentUrl?: string;
+  diagnosis?: Diagnosis;
 }
 
 // This is no longer needed with the new data model
