@@ -32,6 +32,7 @@ export interface HealthRecord {
   createdAt: string;
   bloodPressure?: string;
   pulseRate?: number;
+  attachmentUrl?: string;
 }
 
 // This is no longer needed with the new data model

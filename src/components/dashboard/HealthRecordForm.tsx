@@ -42,8 +42,11 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, Paperclip } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
 const formSchema = z.object({
   type: z.enum(['prescription', 'lab_report', 'allergy', 'note']),
@@ -52,6 +55,13 @@ const formSchema = z.object({
   date: z.date({ required_error: 'A date is required.' }),
   bloodPressure: z.string().optional(),
   pulseRate: z.coerce.number().optional(),
+  attachment: z.any()
+    .refine((file) => !file || file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (file) => !file || ACCEPTED_FILE_TYPES.includes(file.type),
+      ".jpg, .png, and .pdf files are accepted."
+    )
+    .optional(),
 });
 
 interface HealthRecordFormProps {
@@ -80,8 +90,11 @@ export function HealthRecordForm({
       type: 'note',
       bloodPressure: '',
       pulseRate: undefined,
+      attachment: undefined,
     },
   });
+
+  const attachmentRef = form.register("attachment");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -94,7 +107,13 @@ export function HealthRecordForm({
     }
     setIsLoading(true);
     try {
-      await addHealthRecord(user.uid, values);
+      const recordData: any = { ...values };
+      if (values.attachment) {
+        recordData.attachment = values.attachment;
+      }
+
+      await addHealthRecord(user.uid, recordData);
+      
       toast({
         title: 'Success',
         description: 'Health record added successfully.',
@@ -102,6 +121,7 @@ export function HealthRecordForm({
       form.reset();
       onSuccess();
     } catch (error) {
+        console.error(error);
       toast({
         title: 'Error',
         description: 'Failed to add health record.',
@@ -253,6 +273,29 @@ export function HealthRecordForm({
                 </FormItem>
               )}
             />
+
+             <FormField
+                control={form.control}
+                name="attachment"
+                render={({ field: { onChange, value, ...rest } }) => (
+                    <FormItem>
+                        <FormLabel>Attach File (Optional)</FormLabel>
+                         <FormControl>
+                            <div className="relative">
+                               <Input 
+                                type="file" 
+                                className="pl-10"
+                                onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)} 
+                                {...rest} 
+                               />
+                               <Paperclip className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+
             <DialogFooter>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && (

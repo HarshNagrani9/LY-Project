@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 import type { HealthRecord, UserDocument } from '@/lib/types';
+import { uploadFile } from './storage';
 
 const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
@@ -75,16 +76,30 @@ export const createUserDocument = async (userId: string, email: string, role: 'p
 // Add a new health record for a user
 export const addHealthRecord = async (
   userId: string,
-  recordData: Omit<HealthRecord, 'id' | 'userId' | 'createdAt' | 'date'> & { date: Date }
+  recordData: Omit<HealthRecord, 'id' | 'userId' | 'createdAt' | 'date'> & { date: Date; attachment?: File }
 ) => {
   try {
+     const { attachment, ...data } = recordData;
+
+    // First, create the document to get an ID
     const docRef = await addDoc(collection(db, HEALTH_RECORDS_COLLECTION), {
-      ...recordData,
-      date: Timestamp.fromDate(recordData.date), // Convert Date to Timestamp on the server
+      ...data,
+      date: Timestamp.fromDate(recordData.date),
       userId,
       createdAt: serverTimestamp(),
+      attachmentUrl: '', // Initialize with empty URL
     });
-    return docRef.id;
+
+    let attachmentUrl = '';
+    if (attachment) {
+        // Now upload the file using the document ID
+        attachmentUrl = await uploadFile(userId, docRef.id, attachment);
+        
+        // Update the document with the file URL
+        await updateDoc(docRef, { attachmentUrl });
+    }
+
+    return { id: docRef.id, attachmentUrl };
   } catch (error) {
     console.error('Error adding health record: ', error);
     throw new Error('Failed to add health record.');

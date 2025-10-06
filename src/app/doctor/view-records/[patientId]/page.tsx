@@ -7,9 +7,11 @@ import type { HealthRecord, UserDocument } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/icons/Logo';
-import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight } from 'lucide-react';
+import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { RecordAiAnalysis } from '@/components/dashboard/RecordAiAnalysis';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 
 const recordIcons: Record<HealthRecord['type'], React.ReactElement> = {
@@ -169,6 +171,16 @@ export default function ViewPatientRecordsPage() {
                     </div>
                     )}
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
+                  {record.attachmentUrl && (
+                    <div className="mt-4">
+                        <Button asChild variant="outline" size="sm">
+                        <Link href={record.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                            <LinkIcon className="mr-2 h-4 w-4" />
+                            View Attachment
+                        </Link>
+                        </Button>
+                    </div>
+                    )}
                 </CardContent>
                 <CardFooter>
                     <RecordAiAnalysis record={record} user={patient as any} />

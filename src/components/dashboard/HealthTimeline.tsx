@@ -10,9 +10,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Stethoscope, TestTube2, AlertTriangle, HeartPulse, Heart, Activity } from 'lucide-react';
+import { FileText, Stethoscope, TestTube2, AlertTriangle, HeartPulse, Heart, Activity, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { RecordAiAnalysis } from './RecordAiAnalysis';
+import { Button } from '../ui/button';
+import Link from 'next/link';
 
 interface HealthTimelineProps {
   records: HealthRecord[];
@@ -90,6 +92,16 @@ export function HealthTimeline({ records, user }: HealthTimelineProps) {
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
               {record.content}
             </p>
+             {record.attachmentUrl && (
+              <div className="mt-4">
+                <Button asChild variant="outline" size="sm">
+                  <Link href={record.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                    <LinkIcon className="mr-2 h-4 w-4" />
+                    View Attachment
+                  </Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
            <CardFooter>
             <RecordAiAnalysis record={record} user={user} />
