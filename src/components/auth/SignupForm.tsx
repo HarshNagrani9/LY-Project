@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -35,10 +35,22 @@ const formSchema = z
     password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
     confirmPassword: z.string(),
     role: z.enum(['patient', 'doctor'], { required_error: 'Please select a role.' }),
+    weight: z.coerce.number().optional(),
+    height: z.coerce.number().optional(),
+    bloodGroup: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
+  })
+  .refine((data) => {
+    if (data.role === 'patient') {
+      return !!data.weight && !!data.height && !!data.bloodGroup;
+    }
+    return true;
+  }, {
+    message: "Weight, height, and blood group are required for patients.",
+    path: ['weight'], // You can associate the error with a specific field
   });
 
 export function SignupForm() {
@@ -57,6 +69,8 @@ export function SignupForm() {
     },
   });
 
+  const role = form.watch('role');
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setError(null);
@@ -64,7 +78,10 @@ export function SignupForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
       
-      await createUserDocument(user.uid, user.email!, values.role);
+      const { email, role, weight, height, bloodGroup } = values;
+      const userDetails = role === 'patient' ? { weight, height, bloodGroup } : {};
+
+      await createUserDocument(user.uid, email, role, userDetails);
 
       toast({
         title: 'Account Created',
@@ -133,6 +150,65 @@ export function SignupForm() {
             </FormItem>
           )}
         />
+         {role === 'patient' && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="weight"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Weight (kg)</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g., 70" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="height"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Height (cm)</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g., 175" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+            <FormField
+              control={form.control}
+              name="bloodGroup"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Blood Group</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select your blood group" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="A+">A+</SelectItem>
+                            <SelectItem value="A-">A-</SelectItem>
+                            <SelectItem value="B+">B+</SelectItem>
+                            <SelectItem value="B-">B-</SelectItem>
+                            <SelectItem value="AB+">AB+</SelectItem>
+                            <SelectItem value="AB-">AB-</SelectItem>
+                            <SelectItem value="O+">O+</SelectItem>
+                            <SelectItem value="O-">O-</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
         <FormField
           control={form.control}
           name="password"

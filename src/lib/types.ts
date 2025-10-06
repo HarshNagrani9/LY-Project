@@ -1,7 +1,12 @@
+'use server';
 import type { User as FirebaseUser } from "firebase/auth";
 
 export interface User extends FirebaseUser {
     role?: 'patient' | 'doctor';
+    weight?: number;
+    height?: number;
+    bloodGroup?: string;
+    bmi?: number;
 }
 
 export interface UserDocument {
@@ -9,8 +14,12 @@ export interface UserDocument {
     email: string;
     role: 'patient' | 'doctor';
     createdAt: any;
-    pendingConnections?: string[]; // Array of UIDs for pending requests
-    successfulConnections?: string[]; // Array of UIDs for successful connections
+    pendingConnections?: string[];
+    successfulConnections?: string[];
+    weight?: number;
+    height?: number;
+    bloodGroup?: string;
+    bmi?: number;
 }
 
 export interface HealthRecord {

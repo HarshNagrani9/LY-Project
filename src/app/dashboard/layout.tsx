@@ -24,6 +24,7 @@ import {
   LogOut,
   HeartPulse,
   Loader2,
+  User as UserIcon,
 } from 'lucide-react';
 import Logo from '@/components/icons/Logo';
 import { useToast } from '@/hooks/use-toast';
@@ -74,6 +75,7 @@ export default function DashboardLayout({
   const getPageTitle = () => {
     if (pathname === '/dashboard') return 'Dashboard';
     if (pathname === '/dashboard/my-records') return 'My Records';
+    if (pathname === '/dashboard/profile') return 'My Profile';
     return 'Dashboard';
   }
 
@@ -103,6 +105,14 @@ export default function DashboardLayout({
                 <Link href="/dashboard/my-records">
                   <HeartPulse />
                   <span>My Records</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="My Profile" isActive={pathname === '/dashboard/profile'}>
+                <Link href="/dashboard/profile">
+                  <UserIcon />
+                  <span>My Profile</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

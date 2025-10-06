@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, type ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -22,11 +22,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const userDoc = await getUserDocument(firebaseUser.uid);
-        const userData: User = {
-            ...firebaseUser,
-            role: userDoc?.role || 'patient', // Default to patient if role not found
-        };
-        setUser(userData);
+        if (userDoc) {
+            const userData: User = {
+                ...firebaseUser,
+                role: userDoc.role,
+                weight: userDoc.weight,
+                height: userDoc.height,
+                bloodGroup: userDoc.bloodGroup,
+                bmi: userDoc.bmi,
+            };
+            setUser(userData);
+        } else {
+             setUser({ ...firebaseUser, role: 'patient' });
+        }
       } else {
         setUser(null);
       }
@@ -50,7 +58,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [user, loading, router, pathname]);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, setUser }}>
       {children}
     </AuthContext.Provider>
   );

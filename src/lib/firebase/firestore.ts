@@ -46,17 +46,25 @@ export const getUserDocument = async (userId: string): Promise<UserDocument | nu
 }
 
 // Create a user document
-export const createUserDocument = async (userId: string, email: string, role: 'patient' | 'doctor') => {
+export const createUserDocument = async (userId: string, email: string, role: 'patient' | 'doctor', details?: Partial<UserDocument>) => {
     try {
         const userRef = doc(db, USERS_COLLECTION, userId);
-        await setDoc(userRef, {
+        const data: UserDocument = {
             uid: userId,
             email,
             role,
             createdAt: serverTimestamp(),
             pendingConnections: [],
             successfulConnections: [],
-        });
+            ...details
+        };
+
+        if (role === 'patient' && details?.weight && details?.height) {
+            const heightInMeters = details.height / 100;
+            data.bmi = parseFloat((details.weight / (heightInMeters * heightInMeters)).toFixed(2));
+        }
+
+        await setDoc(userRef, data);
     } catch (error) {
         console.error("Error creating user document:", error);
         throw new Error('Failed to create user document.');
@@ -220,6 +228,34 @@ export const getPendingConnections = async (userId: string): Promise<UserDocumen
     }
 }
 
+
+// Update the status of a connection request
+export const updateUserProfile = async (userId: string, data: Partial<UserDocument>) => {
+    try {
+        const userRef = doc(db, USERS_COLLECTION, userId);
+
+        if (data.weight && data.height) {
+            const heightInMeters = data.height / 100;
+            data.bmi = parseFloat((data.weight / (heightInMeters * heightInMeters)).toFixed(2));
+        }
+
+        await updateDoc(userRef, data);
+
+        // Add a health record for the update
+        if (data.weight || data.height) {
+            await addHealthRecord(userId, {
+                type: 'note',
+                title: 'Health Metrics Update',
+                content: `Weight: ${data.weight || 'N/A'} kg\nHeight: ${data.height || 'N/A'} cm\nBMI: ${data.bmi || 'N/A'}`,
+                date: new Date(),
+            });
+        }
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        return { success: false, error: 'Failed to update profile.' };
+    }
+};
 
 // Update the status of a connection request
 export const updateConnectionRequest = async (patientId: string, doctorId: string, status: 'approved' | 'denied') => {
