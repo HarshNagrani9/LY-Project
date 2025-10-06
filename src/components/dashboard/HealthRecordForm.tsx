@@ -50,6 +50,8 @@ const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   content: z.string().min(1, 'Content is required.'),
   date: z.date({ required_error: 'A date is required.' }),
+  bloodPressure: z.string().optional(),
+  pulseRate: z.coerce.number().optional(),
 });
 
 interface HealthRecordFormProps {
@@ -76,6 +78,8 @@ export function HealthRecordForm({
       content: '',
       date: new Date(),
       type: 'note',
+      bloodPressure: '',
+      pulseRate: undefined,
     },
   });
 
@@ -90,8 +94,6 @@ export function HealthRecordForm({
     }
     setIsLoading(true);
     try {
-      // Pass the plain 'values' object directly to the server action.
-      // The date is a standard JavaScript Date object, which is serializable.
       await addHealthRecord(user.uid, values);
       toast({
         title: 'Success',
@@ -203,6 +205,36 @@ export function HealthRecordForm({
                 </FormItem>
               )}
             />
+
+             <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="bloodPressure"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Blood Pressure</FormLabel>
+                    <FormControl>
+                        <Input placeholder="e.g., 120/80" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="pulseRate"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Pulse Rate</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g., 72" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+
 
             <FormField
               control={form.control}

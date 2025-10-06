@@ -8,7 +8,7 @@ import {
   getPendingConnections,
   updateConnectionRequest as updateRequest,
   getHealthRecords,
-  getUserDocument,
+  getUserDocument as getUser,
   getConnectedDoctors,
 } from './firebase/firestore';
 import { headers } from 'next/headers';
@@ -29,7 +29,7 @@ export async function createShareLink(userId: string) {
   }
 }
 
-export { searchPatientsByEmail, getConnectedDoctors };
+export { searchPatientsByEmail, getConnectedDoctors, getUser as getUserDocument };
 
 export async function requestPatientConnection(doctorId: string, patientId: string) {
     const result = await createRequest(doctorId, patientId);
@@ -62,7 +62,7 @@ export async function getPatientRecordsForDoctor(doctorId: string, patientId: st
         throw new Error("Authentication error. You must be logged in.");
     }
 
-    const doctorDoc = await getUserDocument(doctorId);
+    const doctorDoc = await getUser(doctorId);
 
     if (!doctorDoc || !doctorDoc.successfulConnections?.includes(patientId)) {
         throw new Error("You do not have permission to view these records.");

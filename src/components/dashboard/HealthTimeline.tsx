@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Stethoscope, TestTube2, AlertTriangle, HeartPulse } from 'lucide-react';
+import { FileText, Stethoscope, TestTube2, AlertTriangle, HeartPulse, Heart, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface HealthTimelineProps {
@@ -62,6 +62,28 @@ export function HealthTimeline({ records }: HealthTimelineProps) {
             </div>
           </CardHeader>
           <CardContent>
+             {(record.bloodPressure || record.pulseRate) && (
+              <div className="mb-4 grid grid-cols-2 gap-4">
+                {record.bloodPressure && (
+                  <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
+                    <Heart className="h-5 w-5 text-red-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Blood Pressure</p>
+                      <p className="font-semibold text-sm">{record.bloodPressure}</p>
+                    </div>
+                  </div>
+                )}
+                {record.pulseRate && (
+                  <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
+                     <Activity className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Pulse Rate</p>
+                      <p className="font-semibold text-sm">{record.pulseRate} <span className="text-xs">BPM</span></p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
               {record.content}
             </p>

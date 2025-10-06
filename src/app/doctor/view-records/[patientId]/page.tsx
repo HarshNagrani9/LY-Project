@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { getPatientRecordsForDoctor } from '@/lib/actions';
-import type { HealthRecord } from '@/lib/types';
+import { getPatientRecordsForDoctor, getUserDocument } from '@/lib/actions';
+import type { HealthRecord, UserDocument } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/icons/Logo';
-import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight } from 'lucide-react';
 import { format } from 'date-fns';
 
 const recordIcons: Record<HealthRecord['type'], React.ReactElement> = {
@@ -29,6 +29,7 @@ export default function ViewPatientRecordsPage() {
   const { user, loading: authLoading } = useAuth();
   const patientId = params.patientId as string;
   const [records, setRecords] = useState<HealthRecord[]>([]);
+  const [patient, setPatient] = useState<UserDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,8 +39,15 @@ export default function ViewPatientRecordsPage() {
       try {
         setLoading(true);
         setError(null);
-        const patientRecords = await getPatientRecordsForDoctor(user.uid, patientId);
+        // Fetch patient document and records in parallel
+        const [patientRecords, patientDoc] = await Promise.all([
+            getPatientRecordsForDoctor(user.uid, patientId),
+            getUserDocument(patientId)
+        ]);
+
         setRecords(patientRecords);
+        setPatient(patientDoc);
+
       } catch (err: any) {
         setError(err.message || "Failed to fetch records.");
       } finally {
@@ -89,6 +97,37 @@ export default function ViewPatientRecordsPage() {
             </div>
           </header>
 
+          {patient && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Patient Summary</CardTitle>
+                <CardDescription>{patient.email}</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div className="p-3 bg-background rounded-lg">
+                  <Weight className="mx-auto mb-1 h-6 w-6 text-primary" />
+                  <p className="text-xs text-muted-foreground">Weight</p>
+                  <p className="font-bold">{patient.weight || 'N/A'} kg</p>
+                </div>
+                <div className="p-3 bg-background rounded-lg">
+                  <Ruler className="mx-auto mb-1 h-6 w-6 text-primary" />
+                  <p className="text-xs text-muted-foreground">Height</p>
+                  <p className="font-bold">{patient.height || 'N/A'} cm</p>
+                </div>
+                <div className="p-3 bg-background rounded-lg">
+                  <p className="font-bold text-2xl">{patient.bmi || 'N/A'}</p>
+                  <p className="text-xs text-muted-foreground">BMI</p>
+                </div>
+                <div className="p-3 bg-background rounded-lg">
+                  <Droplets className="mx-auto mb-1 h-6 w-6 text-destructive" />
+                  <p className="text-xs text-muted-foreground">Blood Group</p>
+                  <p className="font-bold">{patient.bloodGroup || 'N/A'}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+
           <main className="space-y-6">
             {records.map((record) => (
               <Card key={record.id}>
@@ -105,6 +144,28 @@ export default function ViewPatientRecordsPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
+                   {(record.bloodPressure || record.pulseRate) && (
+                    <div className="mb-4 grid grid-cols-2 gap-4">
+                        {record.bloodPressure && (
+                        <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
+                            <Heart className="h-5 w-5 text-red-500" />
+                            <div>
+                            <p className="text-xs text-muted-foreground">Blood Pressure</p>
+                            <p className="font-semibold text-sm">{record.bloodPressure}</p>
+                            </div>
+                        </div>
+                        )}
+                        {record.pulseRate && (
+                        <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
+                            <Activity className="h-5 w-5 text-blue-500" />
+                            <div>
+                            <p className="text-xs text-muted-foreground">Pulse Rate</p>
+                            <p className="font-semibold text-sm">{record.pulseRate} <span className='text-xs'>BPM</span></p>
+                            </div>
+                        </div>
+                        )}
+                    </div>
+                    )}
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
                 </CardContent>
               </Card>
