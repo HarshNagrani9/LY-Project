@@ -107,12 +107,10 @@ export function HealthRecordForm({
     }
     setIsLoading(true);
     try {
-      const recordData: any = { ...values };
-      if (values.attachment) {
-        recordData.attachment = values.attachment;
-      }
+      // NOTE: The attachment is in `values.attachment`, but we are not uploading it yet.
+      const { attachment, ...recordData } = values;
 
-      await addHealthRecord(user.uid, recordData);
+      await addHealthRecord(user.uid, recordData as any);
       
       toast({
         title: 'Success',
