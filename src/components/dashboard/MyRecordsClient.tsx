@@ -77,7 +77,7 @@ export function MyRecordsClient() {
       </div>
 
       <div className="space-y-6">
-        <AiAssistant records={records} />
+        <AiAssistant records={records} user={user} />
       </div>
     </div>
   );

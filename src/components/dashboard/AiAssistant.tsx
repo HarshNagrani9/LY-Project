@@ -1,21 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { analyzeHealthRecords } from '@/ai/flows/analyze-health-records';
-import type { HealthRecord } from '@/lib/types';
+import { analyzeHealthRecords, type AnalyzeHealthRecordsOutput } from '@/ai/flows/analyze-health-records';
+import type { HealthRecord, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bot, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
+import { Bot, Loader2, Sparkles, AlertTriangle, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 interface AiAssistantProps {
   records: HealthRecord[];
+  user: User | null;
 }
 
-export function AiAssistant({ records }: AiAssistantProps) {
+export function AiAssistant({ records, user }: AiAssistantProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [insights, setInsights] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<AnalyzeHealthRecordsOutput | null>(null);
   const { toast } = useToast();
 
   const handleAnalysis = async () => {
@@ -29,12 +30,17 @@ export function AiAssistant({ records }: AiAssistantProps) {
     }
 
     setIsLoading(true);
-    setInsights(null);
+    setAnalysis(null);
 
     try {
       const recordStrings = records.map(r => `[${r.type.replace('_', ' ')}] ${r.title}: ${r.content}`);
-      const result = await analyzeHealthRecords({ medicalRecords: recordStrings });
-      setInsights(result.insights);
+      const result = await analyzeHealthRecords({ 
+        medicalRecords: recordStrings,
+        weight: user?.weight,
+        height: user?.height,
+        bmi: user?.bmi
+      });
+      setAnalysis(result);
     } catch (error) {
       console.error('AI analysis failed:', error);
       toast({
@@ -71,18 +77,31 @@ export function AiAssistant({ records }: AiAssistantProps) {
           )}
         </Button>
 
-        {insights && (
+        {analysis && (
             <div className="space-y-4">
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Disclaimer</AlertTitle>
                     <AlertDescription>
-                        Its AI generated, consult a doctor for accurate predictions.
+                        AI-generated suggestions are not medical advice. Consult a doctor for accurate guidance.
                     </AlertDescription>
                 </Alert>
-                <div className="p-4 bg-secondary rounded-lg text-sm text-secondary-foreground space-y-2">
-                    <h4 className="font-semibold">Health Insights:</h4>
-                    <p className="whitespace-pre-wrap">{insights}</p>
+                
+                <Alert>
+                    <Lightbulb className="h-4 w-4" />
+                    <AlertTitle>AI Health Summary</AlertTitle>
+                    <AlertDescription>
+                        {analysis.summary}
+                    </AlertDescription>
+                </Alert>
+                
+                <div className="p-4 bg-secondary rounded-lg space-y-3">
+                    <h4 className="font-semibold text-secondary-foreground">Recommendations</h4>
+                    <ul className="space-y-2 text-sm text-secondary-foreground list-disc list-inside">
+                        {analysis.recommendations.map((rec, index) => (
+                            <li key={index}>{rec}</li>
+                        ))}
+                    </ul>
                 </div>
             </div>
         )}

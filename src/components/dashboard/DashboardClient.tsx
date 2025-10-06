@@ -81,7 +81,7 @@ export function DashboardClient() {
 
       <div className="space-y-6">
         <ConnectionRequests />
-        <AiAssistant records={records} />
+        <AiAssistant records={records} user={user} />
       </div>
     </div>
   );
