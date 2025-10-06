@@ -93,7 +93,7 @@ export default function ViewPatientRecordsPage() {
           <header className="flex flex-col sm:flex-row items-center justify-between mb-6">
             <div className="flex items-center gap-3 mb-4 sm:mb-0">
               <Logo className="w-10 h-10" />
-              <h1 className="text-2xl font-bold font-headline">MediSafe</h1>
+              <h1 className="text-2xl font-bold font-headline">MediVault</h1>
             </div>
             <div className="text-center sm:text-right">
               <h2 className="text-xl font-semibold">Patient Health Record</h2>
@@ -198,7 +198,7 @@ export default function ViewPatientRecordsPage() {
             )}
           </main>
           <footer className="text-center mt-8 text-xs text-muted-foreground">
-             &copy; {new Date().getFullYear()} MediSafe. Secure Health Sharing.
+             &copy; {new Date().getFullYear()} MediVault. Secure Health Sharing.
           </footer>
         </div>
       </div>

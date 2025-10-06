@@ -63,7 +63,7 @@ export default function Home() {
         <div className="container flex h-16 max-w-7xl items-center mx-auto">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8" />
-            <span className="font-bold text-lg">MediSafe</span>
+            <span className="font-bold text-lg">MediVault</span>
           </Link>
           <nav className="ml-auto flex items-center gap-2">
             <ThemeToggle />
@@ -120,7 +120,7 @@ export default function Home() {
                         Empowering Your Health Journey
                     </h2>
                     <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                        MediSafe combines cutting-edge technology to provide a
+                        MediVault combines cutting-edge technology to provide a
                         comprehensive solution for personal health management.
                     </p>
                 </div>
@@ -150,7 +150,7 @@ export default function Home() {
           <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
              <Logo className="h-8 w-8" />
              <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                &copy; {new Date().getFullYear()} MediSafe. All rights reserved.
+                &copy; {new Date().getFullYear()} MediVault. All rights reserved.
             </p>
           </div>
           <nav className="flex gap-4 sm:gap-6">

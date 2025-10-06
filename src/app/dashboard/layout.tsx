@@ -104,7 +104,7 @@ export default function DashboardLayout({
           <Link href="/dashboard" className="flex items-center gap-2">
             <Logo className="w-8 h-8" />
             <span className="font-bold text-xl group-data-[collapsible=icon]:hidden">
-              MediSafe
+              MediVault
             </span>
           </Link>
         </SidebarHeader>

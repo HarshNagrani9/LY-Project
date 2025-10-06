@@ -5,7 +5,7 @@ import { AuthProvider } from '@/components/AuthProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'MediSafe',
+  title: 'MediVault',
   description: 'A Blockchain & AI-Powered Personal Health Record System',
 };
 
