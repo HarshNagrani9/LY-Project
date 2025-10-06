@@ -66,6 +66,9 @@ export function SignupForm() {
       password: '',
       confirmPassword: '',
       role: 'patient',
+      weight: undefined,
+      height: undefined,
+      bloodGroup: '',
     },
   });
 
@@ -160,7 +163,7 @@ export function SignupForm() {
                     <FormItem>
                     <FormLabel>Weight (kg)</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="e.g., 70" {...field} />
+                        <Input type="number" placeholder="e.g., 70" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -173,7 +176,7 @@ export function SignupForm() {
                     <FormItem>
                     <FormLabel>Height (cm)</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="e.g., 175" {...field} />
+                        <Input type="number" placeholder="e.g., 175" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
