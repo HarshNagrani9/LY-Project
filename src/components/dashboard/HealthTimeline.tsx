@@ -49,7 +49,7 @@ export function HealthTimeline({ records, user }: HealthTimelineProps) {
   }
 
   return (
-    <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
+    <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
       {records.map((record) => (
         <Card key={record.id}>
           <CardHeader className="flex flex-row items-start gap-4">
