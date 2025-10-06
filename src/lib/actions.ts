@@ -32,7 +32,8 @@ export async function createShareLink(userId: string) {
   }
 }
 
-export { searchPatientsByEmail, getConnectedDoctors, getUserDocument, getHealthRecord };
+export { searchPatientsByEmail, getConnectedDoctors, getHealthRecord };
+export { getUser as getUserDocument };
 
 export async function requestPatientConnection(doctorId: string, patientId: string) {
     const result = await createRequest(doctorId, patientId);
