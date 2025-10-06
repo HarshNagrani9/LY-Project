@@ -42,8 +42,6 @@ export default function DoctorLayout({
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/login');
-    } else if (!loading && user?.role === 'patient') {
-      router.replace('/dashboard');
     }
   }, [loading, user, router]);
 
@@ -57,13 +55,34 @@ export default function DoctorLayout({
     }
   };
 
-  if (loading || !user || user.role !== 'doctor') {
+  if (loading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
   }
+
+  // If the user has a role and it's not 'doctor', redirect them.
+  if (user.role && user.role !== 'doctor') {
+    router.replace('/dashboard');
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If the user's role is not yet defined, show a loader.
+  // This prevents the doctor dashboard from flashing for a patient.
+  if (!user.role) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
 
   const getInitials = (email: string | null) => {
     if (!email) return 'D';
