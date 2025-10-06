@@ -1,19 +1,22 @@
 'use client';
 
-import type { HealthRecord } from '@/lib/types';
+import type { HealthRecord, User } from '@/lib/types';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Stethoscope, TestTube2, AlertTriangle, HeartPulse, Heart, Activity } from 'lucide-react';
 import { format } from 'date-fns';
+import { RecordAiAnalysis } from './RecordAiAnalysis';
 
 interface HealthTimelineProps {
   records: HealthRecord[];
+  user: User | null;
 }
 
 const recordIcons: Record<HealthRecord['type'], React.ReactElement> = {
@@ -30,7 +33,7 @@ const recordLabels: Record<HealthRecord['type'], string> = {
   note: 'Note',
 };
 
-export function HealthTimeline({ records }: HealthTimelineProps) {
+export function HealthTimeline({ records, user }: HealthTimelineProps) {
   if (records.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-12 px-4 border-2 border-dashed rounded-lg">
@@ -44,7 +47,7 @@ export function HealthTimeline({ records }: HealthTimelineProps) {
   }
 
   return (
-    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-4">
+    <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
       {records.map((record) => (
         <Card key={record.id}>
           <CardHeader className="flex flex-row items-start gap-4">
@@ -88,6 +91,9 @@ export function HealthTimeline({ records }: HealthTimelineProps) {
               {record.content}
             </p>
           </CardContent>
+           <CardFooter>
+            <RecordAiAnalysis record={record} user={user} />
+          </CardFooter>
         </Card>
       ))}
     </div>

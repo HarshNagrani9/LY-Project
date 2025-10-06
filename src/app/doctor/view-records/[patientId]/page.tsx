@@ -4,11 +4,13 @@ import { useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { getPatientRecordsForDoctor, getUserDocument } from '@/lib/actions';
 import type { HealthRecord, UserDocument } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/icons/Logo';
 import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight } from 'lucide-react';
 import { format } from 'date-fns';
+import { RecordAiAnalysis } from '@/components/dashboard/RecordAiAnalysis';
+
 
 const recordIcons: Record<HealthRecord['type'], React.ReactElement> = {
   prescription: <Stethoscope className="h-6 w-6 text-blue-500" />,
@@ -147,7 +149,7 @@ export default function ViewPatientRecordsPage() {
                    {(record.bloodPressure || record.pulseRate) && (
                     <div className="mb-4 grid grid-cols-2 gap-4">
                         {record.bloodPressure && (
-                        <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
+                        <div className="flex items-center gap-2 p-2 bg-background rounded-lg">
                             <Heart className="h-5 w-5 text-red-500" />
                             <div>
                             <p className="text-xs text-muted-foreground">Blood Pressure</p>
@@ -156,7 +158,7 @@ export default function ViewPatientRecordsPage() {
                         </div>
                         )}
                         {record.pulseRate && (
-                        <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg">
+                        <div className="flex items-center gap-2 p-2 bg-background rounded-lg">
                             <Activity className="h-5 w-5 text-blue-500" />
                             <div>
                             <p className="text-xs text-muted-foreground">Pulse Rate</p>
@@ -168,6 +170,9 @@ export default function ViewPatientRecordsPage() {
                     )}
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
                 </CardContent>
+                <CardFooter>
+                    <RecordAiAnalysis record={record} user={patient as any} />
+                </CardFooter>
               </Card>
             ))}
              {records.length === 0 && (

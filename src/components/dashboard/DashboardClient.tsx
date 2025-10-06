@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { getHealthRecords } from '@/lib/firebase/firestore';
 import type { HealthRecord } from '@/lib/types';
 import { HealthTimeline } from './HealthTimeline';
-import { AiAssistant } from './AiAssistant';
 import { HealthRecordForm } from './HealthRecordForm';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
@@ -74,14 +73,13 @@ export function DashboardClient() {
             </HealthRecordForm>
           </CardHeader>
           <CardContent>
-            <HealthTimeline records={records} />
+            <HealthTimeline records={records} user={user} />
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-6">
         <ConnectionRequests />
-        <AiAssistant records={records} user={user} />
       </div>
     </div>
   );

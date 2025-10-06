@@ -4,38 +4,28 @@ import { useState } from 'react';
 import { analyzeHealthRecords, type AnalyzeHealthRecordsOutput } from '@/ai/flows/analyze-health-records';
 import type { HealthRecord, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bot, Loader2, Sparkles, AlertTriangle, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
-interface AiAssistantProps {
-  records: HealthRecord[];
+interface RecordAiAnalysisProps {
+  record: HealthRecord;
   user: User | null;
 }
 
-export function AiAssistant({ records, user }: AiAssistantProps) {
+export function RecordAiAnalysis({ record, user }: RecordAiAnalysisProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<AnalyzeHealthRecordsOutput | null>(null);
   const { toast } = useToast();
 
   const handleAnalysis = async () => {
-    if (records.length === 0) {
-        toast({
-            title: "No Records Found",
-            description: "Please add at least one health record to analyze.",
-            variant: "destructive"
-        });
-        return;
-    }
-
     setIsLoading(true);
     setAnalysis(null);
 
     try {
-      const recordStrings = records.map(r => `[${r.type.replace('_', ' ')}] ${r.title}: ${r.content}`);
+      const recordString = `[${record.type.replace('_', ' ')}] ${record.title}: ${record.content}`;
       const result = await analyzeHealthRecords({ 
-        medicalRecords: recordStrings,
+        medicalRecords: [recordString],
         weight: user?.weight,
         height: user?.height,
         bmi: user?.bmi
@@ -45,7 +35,7 @@ export function AiAssistant({ records, user }: AiAssistantProps) {
       console.error('AI analysis failed:', error);
       toast({
         title: 'Analysis Failed',
-        description: 'Could not generate health insights at this time.',
+        description: 'Could not generate health insights for this record.',
         variant: 'destructive',
       });
     } finally {
@@ -54,31 +44,25 @@ export function AiAssistant({ records, user }: AiAssistantProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-4">
-        <Bot className="h-8 w-8 text-primary" />
-        <div>
-            <CardTitle>AI Health Assistant</CardTitle>
-            <CardDescription>Get insights from your records.</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Button onClick={handleAnalysis} disabled={isLoading} className="w-full">
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-             <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Analyze My Records
-            </>
-          )}
-        </Button>
+    <div className='w-full space-y-4'>
+        {!analysis && (
+            <Button onClick={handleAnalysis} disabled={isLoading} className="w-full" variant="ghost">
+            {isLoading ? (
+                <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analyzing...
+                </>
+            ) : (
+                <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Analyze with AI
+                </>
+            )}
+            </Button>
+        )}
 
         {analysis && (
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4 border-t">
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Disclaimer</AlertTitle>
@@ -89,7 +73,7 @@ export function AiAssistant({ records, user }: AiAssistantProps) {
                 
                 <Alert>
                     <Lightbulb className="h-4 w-4" />
-                    <AlertTitle>AI Health Summary</AlertTitle>
+                    <AlertTitle>AI Health Summary for this Record</AlertTitle>
                     <AlertDescription>
                         {analysis.summary}
                     </AlertDescription>
@@ -103,9 +87,12 @@ export function AiAssistant({ records, user }: AiAssistantProps) {
                         ))}
                     </ul>
                 </div>
+
+                 <Button onClick={() => setAnalysis(null)} variant="ghost" size="sm" className="w-full">
+                    Clear Analysis
+                </Button>
             </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }

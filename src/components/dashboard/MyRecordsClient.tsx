@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { getHealthRecords } from '@/lib/firebase/firestore';
 import type { HealthRecord } from '@/lib/types';
 import { HealthTimeline } from './HealthTimeline';
-import { AiAssistant } from './AiAssistant';
 import { HealthRecordForm } from './HealthRecordForm';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Loader2 } from 'lucide-react';
@@ -50,35 +49,27 @@ export function MyRecordsClient() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <div className="lg:col-span-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>My Health Records</CardTitle>
-              <CardDescription>
-                A chronological overview of your medical history.
-              </CardDescription>
-            </div>
-            <HealthRecordForm
-              open={isFormOpen}
-              onOpenChange={setIsFormOpen}
-              onSuccess={handleRecordAdded}
-            >
-              <Button onClick={() => setIsFormOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Record
-              </Button>
-            </HealthRecordForm>
-          </CardHeader>
-          <CardContent>
-            <HealthTimeline records={records} />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-6">
-        <AiAssistant records={records} user={user} />
-      </div>
-    </div>
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+            <CardTitle>My Health Records</CardTitle>
+            <CardDescription>
+            A chronological overview of your medical history.
+            </CardDescription>
+        </div>
+        <HealthRecordForm
+            open={isFormOpen}
+            onOpenChange={setIsFormOpen}
+            onSuccess={handleRecordAdded}
+        >
+            <Button onClick={() => setIsFormOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Record
+            </Button>
+        </HealthRecordForm>
+        </CardHeader>
+        <CardContent>
+            <HealthTimeline records={records} user={user} />
+        </CardContent>
+    </Card>
   );
 }
