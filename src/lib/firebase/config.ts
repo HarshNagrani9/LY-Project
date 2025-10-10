@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 // const firebaseConfig = {
 //   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "your-mock-api-key",
@@ -16,7 +15,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyCs4HqZbQpSxcADSMdtWilKk5JGFZza0HA",
   authDomain: "ly-project-medivault.firebaseapp.com",
   projectId: "ly-project-medivault",
-  storageBucket: "ly-project-medivault.appspot.com",
   messagingSenderId: "801797365387",
   appId: "1:801797365387:web:aa3d2f19cf1d6993237e8e",
   measurementId: "G-2W1PQWPGP1"
@@ -26,6 +24,5 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-export { app, auth, db, storage };
+export { app, auth, db };

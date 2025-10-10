@@ -7,7 +7,7 @@ import type { HealthRecord, UserDocument } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Logo from '@/components/icons/Logo';
-import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight, Link as LinkIcon, Pencil } from 'lucide-react';
+import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, Heart, Activity, Droplets, Ruler, Weight, Link as LinkIcon, Pencil, Download, Eye, FileIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -27,10 +27,17 @@ const recordLabels: Record<HealthRecord['type'], string> = {
   note: 'Note',
 };
 
+// Helper function to extract filename from URL
+const getFileName = (url: string): string => {
+  const parts = url.split('/');
+  const filename = parts[parts.length - 1];
+  return filename || 'Attachment';
+};
+
 export default function ViewPatientRecordsPage() {
   const params = useParams();
   const { user, loading: authLoading } = useAuth();
-  const patientId = params.patientId as string;
+  const patientId = params?.patientId as string;
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [patient, setPatient] = useState<UserDocument | null>(null);
   const [loading, setLoading] = useState(true);
@@ -132,14 +139,45 @@ export default function ViewPatientRecordsPage() {
 
 
           <main className="space-y-6">
+            {records.length > 0 && (
+              <div className="mb-6 p-4 bg-background rounded-lg border">
+                <h3 className="text-lg font-semibold mb-2">Records Summary</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">{records.length}</p>
+                    <p className="text-muted-foreground">Total Records</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">{records.filter(r => r.attachmentUrl).length}</p>
+                    <p className="text-muted-foreground">With Attachments</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">{records.filter(r => r.diagnosis).length}</p>
+                    <p className="text-muted-foreground">Diagnosed</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-orange-600">{records.filter(r => !r.diagnosis).length}</p>
+                    <p className="text-muted-foreground">Pending Review</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {records.map((record) => (
-              <Link href={`/doctor/diagnose/${record.id}`} key={record.id} className="block group">
+              <div key={record.id} className="block group">
                 <Card className="transition-all duration-200 group-hover:shadow-lg group-hover:border-primary">
                     <CardHeader className="flex flex-row items-start gap-4">
                     <div className="p-2 bg-background rounded-full mt-1">{recordIcons[record.type]}</div>
                     <div className='flex-1'>
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">{record.title}</CardTitle>
+                            <div className="flex items-center gap-2">
+                                <CardTitle className="text-lg">{record.title}</CardTitle>
+                                {record.attachmentUrl && (
+                                    <div title="Has attachment">
+                                        <FileIcon className="h-4 w-4 text-green-600" />
+                                    </div>
+                                )}
+                            </div>
                             <Badge variant={record.diagnosis ? 'default' : 'outline'}>{record.diagnosis ? 'Diagnosed' : recordLabels[record.type]}</Badge>
                         </div>
                         <CardDescription>
@@ -172,24 +210,41 @@ export default function ViewPatientRecordsPage() {
                         )}
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
                     {record.attachmentUrl && (
-                        <div className="mt-4">
-                            <Button asChild variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
-                            <a href={record.attachmentUrl} target="_blank" rel="noopener noreferrer">
-                                <LinkIcon className="mr-2 h-4 w-4" />
-                                View Attachment
-                            </a>
-                            </Button>
+                        <div className="mt-4 p-3 bg-background rounded-lg border">
+                            <div className="flex items-center gap-3 mb-2">
+                                <FileIcon className="h-5 w-5 text-primary" />
+                                <div>
+                                    <span className="text-sm font-medium">Attached File</span>
+                                    <p className="text-xs text-muted-foreground">{getFileName(record.attachmentUrl)}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button asChild variant="outline" size="sm">
+                                    <a href={record.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View
+                                    </a>
+                                </Button>
+                                <Button asChild variant="default" size="sm">
+                                    <a href={record.attachmentUrl} download={getFileName(record.attachmentUrl)}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download
+                                    </a>
+                                </Button>
+                            </div>
                         </div>
                         )}
                     </CardContent>
                     <CardFooter>
-                       <Button variant="outline" className="w-full">
-                         <Pencil className="mr-2" />
-                         {record.diagnosis ? 'Edit Diagnosis' : 'Add Diagnosis'}
+                       <Button asChild variant="outline" className="w-full">
+                         <Link href={`/doctor/diagnose/${record.id}`}>
+                           <Pencil className="mr-2" />
+                           {record.diagnosis ? 'Edit Diagnosis' : 'Add Diagnosis'}
+                         </Link>
                        </Button>
                     </CardFooter>
                 </Card>
-              </Link>
+              </div>
             ))}
              {records.length === 0 && (
                 <Card>
