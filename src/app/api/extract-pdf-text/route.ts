@@ -41,23 +41,29 @@ export async function POST(request: NextRequest) {
       const dataBuffer = fs.readFileSync(filePath);
       
       try {
-        // For now, let's create a mock extraction that works
-        // This simulates successful PDF text extraction
-        const mockText = `This is extracted text from the PDF attachment: ${path.basename(filePath)}.
+        // Dynamic import of pdf-parse-fixed to avoid issues in Next.js
+        const pdfParse = (await import('pdf-parse-fixed')).default;
         
-The PDF appears to be a medical document or health record. Based on the filename and context, this could contain:
-- Lab results
-- Prescription details
-- Medical reports
-- Health assessments
-
-Since the actual PDF text extraction is experiencing technical difficulties, this is a placeholder analysis that acknowledges the presence of an attachment and provides general health guidance based on the context of the health record system.`;
+        // Use pdf-parse to extract text from the PDF
+        const pdfData = await pdfParse(dataBuffer);
+        
+        // Clean up the extracted text
+        const extractedText = pdfData.text.trim();
+        
+        if (!extractedText || extractedText.length === 0) {
+          return NextResponse.json({ 
+            text: '',
+            message: 'No text content found in the PDF. The PDF might be image-based or contain only images.',
+            fileType: 'pdf',
+            pages: pdfData.numpages
+          });
+        }
         
         return NextResponse.json({ 
-          text: mockText,
-          pages: 1,
+          text: extractedText,
+          pages: pdfData.numpages,
           fileType: 'pdf',
-          message: 'PDF content extracted successfully (mock extraction)'
+          message: 'PDF content extracted successfully'
         });
       } catch (parseError) {
         console.error('PDF parsing error:', parseError);

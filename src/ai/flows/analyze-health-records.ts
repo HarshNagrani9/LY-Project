@@ -83,11 +83,14 @@ const attachmentPrompt = ai.definePrompt({
   Attachment Content:
   {{{attachmentText}}}
 
+  IMPORTANT: Only analyze the actual content provided in the attachment. Do not generate generic responses or assume content that is not present in the attachment text.
+
   Provide:
-  1. A detailed health analysis based on the attachment content
-  2. 3-4 actionable health recommendations specific to the attachment
+  1. A detailed health analysis based ONLY on the specific medical information found in the attachment content
+  2. 3-4 actionable health recommendations that are directly relevant to the attachment content
   3. Keep language clear, encouraging, and medically appropriate
-  4. Focus specifically on the medical information found in the attachment
+  4. If the attachment contains lab results, prescriptions, or specific medical data, focus your analysis on those specific findings
+  5. Do not mention that "the PDF could not be extracted" or provide generic placeholder text - only analyze what is actually provided
   `,
 });
 

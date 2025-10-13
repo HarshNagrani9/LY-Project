@@ -53,7 +53,7 @@ export function RecordAiAnalysis({ record, user }: RecordAiAnalysisProps) {
             const data = await response.json();
             const attachmentText = data.text || '';
             
-            if (attachmentText) {
+            if (attachmentText && attachmentText.trim().length > 0) {
               const attachmentPromise = analyzeAttachment({ 
                 attachmentText: attachmentText,
                 recordType: record.type,
@@ -65,8 +65,12 @@ export function RecordAiAnalysis({ record, user }: RecordAiAnalysisProps) {
             } else {
               // If no text extracted, create a placeholder analysis
               const placeholderPromise = Promise.resolve({
-                summary: 'Attachment detected but text extraction is currently unavailable. The PDF content could not be analyzed.',
-                recommendations: ['Consider consulting with your healthcare provider to review the attachment manually.', 'Ensure the PDF is a text-based document rather than image-based.']
+                summary: 'PDF attachment detected but no text content could be extracted. This may be because the PDF contains only images, is password-protected, or uses an unsupported format.',
+                recommendations: [
+                  'Consult with your healthcare provider to review the attachment manually.',
+                  'If the PDF contains text, try converting it to a different format or ensure it\'s not password-protected.',
+                  'Consider uploading a text-based document instead of an image-based PDF.'
+                ]
               });
               analysisPromises.push(placeholderPromise);
             }
@@ -74,8 +78,12 @@ export function RecordAiAnalysis({ record, user }: RecordAiAnalysisProps) {
         } catch (pdfError) {
           console.warn('Attachment extraction failed:', pdfError);
           const errorPromise = Promise.resolve({
-            summary: 'Attachment analysis failed due to technical issues.',
-            recommendations: ['Please consult with your healthcare provider to review the attachment.', 'Try uploading a different file format if possible.']
+            summary: 'Attachment analysis failed due to technical issues with the PDF extraction service.',
+            recommendations: [
+              'Please consult with your healthcare provider to review the attachment manually.',
+              'Try uploading a different file format if possible.',
+              'Ensure the PDF file is not corrupted and is accessible.'
+            ]
           });
           analysisPromises.push(errorPromise);
         }
@@ -125,7 +133,7 @@ export function RecordAiAnalysis({ record, user }: RecordAiAnalysisProps) {
                 <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Disclaimer</AlertTitle>
-                    <AlertDescription>
+                  <AlertDescription className="text-yellow-600 dark:text-yellow-400">
                         AI-generated suggestions are not medical advice. Consult a doctor for accurate guidance.
                     </AlertDescription>
                 </Alert>
