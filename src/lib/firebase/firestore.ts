@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 import type { HealthRecord, UserDocument, Diagnosis } from '@/lib/types';
+import { encryptObject, decryptObject, type EncryptedBlob } from '@/lib/crypto';
 
 const USERS_COLLECTION = 'users';
 const HEALTH_RECORDS_COLLECTION = 'healthRecords';
@@ -103,17 +104,23 @@ export const createUserDocument = async (userId: string, email: string, role: 'p
 }
 
 
-// Add a new health record for a user
+// Add a new health record for a user (sensitive fields encrypted)
 export const addHealthRecord = async (
   userId: string,
   recordData: Omit<HealthRecord, 'id' | 'userId' | 'createdAt' | 'date'> & { date: Date }
 ) => {
   try {
+    // Split metadata (queryable) vs sensitive payload (encrypted)
+    const { type, date, title, content, bloodPressure, pulseRate, diagnosis, attachmentUrl } = recordData as any;
+    const sensitivePayload = { title, content, bloodPressure, pulseRate, diagnosis, attachmentUrl };
+    const encryptedData = await encryptObject(sensitivePayload);
+
     const docRef = await addDoc(collection(db, HEALTH_RECORDS_COLLECTION), {
-      ...recordData,
-      date: Timestamp.fromDate(recordData.date),
       userId,
+      type,
+      date: Timestamp.fromDate(date),
       createdAt: serverTimestamp(),
+      encryptedData,
     });
 
     return { id: docRef.id };
@@ -131,11 +138,35 @@ export const getHealthRecord = async (recordId: string): Promise<HealthRecord | 
         if (!recordSnap.exists()) {
             return null;
         }
-        const data = recordSnap.data();
-        return {
-            id: recordSnap.id,
-            ...convertRecordTimestamps(data),
-        } as HealthRecord;
+        const data = recordSnap.data() as any;
+
+        // Convert timestamps to ISO strings for metadata
+        const meta = convertRecordTimestamps(data);
+
+        // Decrypt sensitive payload
+        let decrypted: any = {};
+        try {
+          if (data.encryptedData) {
+            decrypted = await decryptObject<any>(data.encryptedData as EncryptedBlob);
+          }
+        } catch (e) {
+          console.error('Decryption failed for record', recordId, e);
+        }
+
+        const result: HealthRecord = {
+          id: recordSnap.id,
+          userId: meta.userId,
+          type: meta.type,
+          title: decrypted.title ?? '',
+          content: decrypted.content ?? '',
+          date: meta.date,
+          createdAt: meta.createdAt,
+          bloodPressure: decrypted.bloodPressure,
+          pulseRate: decrypted.pulseRate,
+          diagnosis: decrypted.diagnosis,
+          attachmentUrl: decrypted.attachmentUrl,
+        };
+        return result;
     } catch (error) {
         console.error('Error getting health record: ', error);
         throw new Error('Failed to fetch health record.');
@@ -151,13 +182,34 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
     );
     const querySnapshot = await getDocs(q);
     
-    const records = querySnapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...convertRecordTimestamps(data),
-      } as HealthRecord;
-    });
+    const records = await Promise.all(querySnapshot.docs.map(async (docSnap) => {
+      const data = docSnap.data() as any;
+      const meta = convertRecordTimestamps(data);
+
+      let decrypted: any = {};
+      try {
+        if (data.encryptedData) {
+          decrypted = await decryptObject<any>(data.encryptedData as EncryptedBlob);
+        }
+      } catch (e) {
+        console.error('Decryption failed for record', docSnap.id, e);
+      }
+
+      const rec: HealthRecord = {
+        id: docSnap.id,
+        userId: meta.userId,
+        type: meta.type,
+        title: decrypted.title ?? '',
+        content: decrypted.content ?? '',
+        date: meta.date,
+        createdAt: meta.createdAt,
+        bloodPressure: decrypted.bloodPressure,
+        pulseRate: decrypted.pulseRate,
+        diagnosis: decrypted.diagnosis,
+        attachmentUrl: decrypted.attachmentUrl,
+      };
+      return rec;
+    }));
 
     return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -354,11 +406,27 @@ export const getConnectedDoctors = async (patientId: string): Promise<UserDocume
 export const addDiagnosisToRecord = async (recordId: string, diagnosis: Omit<Diagnosis, 'createdAt'>) => {
     try {
         const recordRef = doc(db, HEALTH_RECORDS_COLLECTION, recordId);
-        const diagnosisWithTimestamp = {
+        const recordSnap = await getDoc(recordRef);
+        if (!recordSnap.exists()) {
+          return { success: false, error: 'Record not found.' };
+        }
+
+        const data = recordSnap.data() as any;
+        let decrypted: any = {};
+        if (data.encryptedData) {
+          decrypted = await decryptObject<any>(data.encryptedData as EncryptedBlob);
+        }
+
+        const updatedPayload = {
+          ...decrypted,
+          diagnosis: {
             ...diagnosis,
-            createdAt: serverTimestamp(),
+            createdAt: new Date().toISOString(),
+          },
         };
-        await updateDoc(recordRef, { diagnosis: diagnosisWithTimestamp });
+
+        const encryptedData = await encryptObject(updatedPayload);
+        await updateDoc(recordRef, { encryptedData });
         return { success: true };
     } catch (error) {
         console.error("Error adding diagnosis:", error);
