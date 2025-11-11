@@ -329,6 +329,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/use-auth';
 import { addHealthRecord } from '@/lib/firebase/firestore';
+import { useWallet } from '@/hooks/useWallet';
+import { createFileOnChain } from '@/lib/contract';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -408,6 +410,7 @@ export function HealthRecordForm({
 }: HealthRecordFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { address: walletAddress, isConnected, connect, switchToSepolia, isSepolia } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -444,6 +447,87 @@ export function HealthRecordForm({
     return (await res.json()).url; // Returns public URL
   }
 
+  // 🔹 NEW: helpers for client-side encryption for Pinata path
+  function arrayBufferToBase64(buf: ArrayBuffer): string {
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    // @ts-expect-error btoa exists in browser
+    return typeof btoa !== 'undefined' ? btoa(binary) : Buffer.from(binary, 'binary').toString('base64');
+  }
+
+  function getSubtle(): SubtleCrypto {
+    // Ensure running on client and Web Crypto is available
+    const subtle = (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) ? window.crypto.subtle : undefined;
+    if (!subtle) {
+      throw new Error('Web Crypto API is not available in this environment. Please use a modern browser over HTTPS.');
+    }
+    return subtle;
+  }
+
+  async function sha256ArrayBuffer(data: ArrayBuffer): Promise<string> {
+    const subtle = getSubtle();
+    const hashBuf = await subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuf));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function generateAesGcmKey(): Promise<CryptoKey> {
+    const subtle = getSubtle();
+    return subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async function exportKeyBase64(key: CryptoKey): Promise<string> {
+    const subtle = getSubtle();
+    const raw = await subtle.exportKey('raw', key);
+    return arrayBufferToBase64(raw);
+  }
+
+  async function encryptAesGcm(plaintext: ArrayBuffer, key: CryptoKey): Promise<{ iv: Uint8Array; ciphertext: ArrayBuffer }> {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const subtle = getSubtle();
+    const ciphertext = await subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      plaintext
+    );
+    return { iv, ciphertext };
+  }
+
+  // 🔹 NEW: upload encrypted bytes to Pinata via server route
+  async function uploadEncryptedToPinata(file: File): Promise<{ cid: string; size: number; sha256: string; keyBase64: string; ivBase64: string; }> {
+    const fileBuf = await file.arrayBuffer();
+    const key = await generateAesGcmKey();
+    const { iv, ciphertext } = await encryptAesGcm(fileBuf, key);
+    const sha256 = await sha256ArrayBuffer(ciphertext);
+
+    const form = new FormData();
+    const cipherBlob = new Blob([ciphertext], { type: 'application/octet-stream' });
+    form.append('file', cipherBlob, `${file.name}.enc`);
+    form.append('fileName', file.name);
+    form.append('mimeType', file.type || 'application/pdf');
+    form.append('sha256', sha256);
+
+    const res = await fetch('/api/storage/upload', {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(text || `Pinata upload failed`);
+    }
+    const json = await res.json();
+    const keyBase64 = await exportKeyBase64(key);
+    const ivBase64 = arrayBufferToBase64(iv.buffer);
+    return { cid: json.cid, size: json.size, sha256, keyBase64, ivBase64 };
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       toast({
@@ -460,10 +544,61 @@ export function HealthRecordForm({
 
       // 🔹 CHANGED: handle file upload if a file is selected
       let fileUrl: string | undefined = undefined;
+      let attachmentCid: string | undefined = undefined;
+      let attachmentEncryptionKey: string | undefined = undefined;
+      let attachmentEncryptionIv: string | undefined = undefined;
+      let fileId: bigint | undefined = undefined;
+      
       if (attachment && attachment.length > 0) {
         const file = attachment[0]; // single file
         try {
+          // Local upload
           fileUrl = await uploadFile(file);
+          
+          // Pinata upload (encrypted)
+          const pin = await uploadEncryptedToPinata(file);
+          attachmentCid = pin.cid;
+          attachmentEncryptionKey = pin.keyBase64;
+          attachmentEncryptionIv = pin.ivBase64;
+          
+          // 🔹 NEW: Write to blockchain if wallet is connected
+          if (isConnected && walletAddress) {
+            try {
+              // Ensure we're on Sepolia
+              if (!isSepolia) {
+                await switchToSepolia();
+                // Wait a bit for network switch
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
+              
+              const result = await createFileOnChain(
+                pin.cid,
+                pin.sha256,
+                file.type || 'application/pdf',
+                file.size
+              );
+              fileId = result.fileId;
+              
+              toast({
+                title: 'Blockchain Record Created',
+                description: `File recorded on-chain. TX: ${result.txHash.slice(0, 10)}...`,
+              });
+            } catch (blockchainError: any) {
+              // Don't fail the whole upload if blockchain fails
+              console.error('Blockchain upload failed:', blockchainError);
+              toast({
+                title: 'Blockchain Upload Warning',
+                description: 'File uploaded to Pinata but blockchain record failed. You can retry later.',
+                variant: 'destructive',
+              });
+            }
+          } else {
+            // Wallet not connected - show info toast
+            toast({
+              title: 'Wallet Not Connected',
+              description: 'File uploaded to Pinata. Connect wallet to record on blockchain.',
+            });
+          }
         } catch (err: any) {
           toast({
             title: 'File Upload Error',
@@ -475,8 +610,14 @@ export function HealthRecordForm({
         }
       }
 
-      // 🔹 CHANGED: Save record including uploaded file URL
-      await addHealthRecord(user.uid, { ...recordData, attachmentUrl: fileUrl });
+      // 🔹 CHANGED: Save record including both local URL and Pinata CID with encryption keys
+      await addHealthRecord(user.uid, { 
+        ...recordData, 
+        attachmentUrl: fileUrl, 
+        attachmentCid,
+        attachmentEncryptionKey,
+        attachmentEncryptionIv,
+      });
 
       toast({
         title: 'Success',

@@ -11,6 +11,7 @@ import { AlertCircle, FileText, Stethoscope, TestTube2, AlertTriangle, Loader2, 
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { PinataFileViewer } from '@/components/dashboard/PinataFileViewer';
 
 
 const recordIcons: Record<HealthRecord['type'], React.ReactElement> = {
@@ -209,12 +210,21 @@ export default function ViewPatientRecordsPage() {
                         </div>
                         )}
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
-                    {record.attachmentUrl && (
+                    {record.attachmentCid ? (
+                        <PinataFileViewer 
+                            cid={record.attachmentCid}
+                            fileName={record.attachmentUrl ? getFileName(record.attachmentUrl) : undefined}
+                            mimeType="application/pdf"
+                            encryptionKey={record.attachmentEncryptionKey}
+                            iv={record.attachmentEncryptionIv}
+                        />
+                    ) : record.attachmentUrl ? (
+                        // Fallback to local storage if no CID (for old records)
                         <div className="mt-4 p-3 bg-background rounded-lg border">
                             <div className="flex items-center gap-3 mb-2">
                                 <FileIcon className="h-5 w-5 text-primary" />
                                 <div>
-                                    <span className="text-sm font-medium">Attached File</span>
+                                    <span className="text-sm font-medium">Attached File (Local)</span>
                                     <p className="text-xs text-muted-foreground">{getFileName(record.attachmentUrl)}</p>
                                 </div>
                             </div>
@@ -233,7 +243,7 @@ export default function ViewPatientRecordsPage() {
                                 </Button>
                             </div>
                         </div>
-                        )}
+                    ) : null}
                     </CardContent>
                     <CardFooter>
                        <Button asChild variant="outline" className="w-full">

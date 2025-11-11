@@ -28,6 +28,7 @@ import {
 import Logo from '@/components/icons/Logo';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { WalletStatus } from '@/components/dashboard/WalletStatus';
 
 export default function DoctorLayout({
   children,
@@ -157,7 +158,8 @@ export default function DoctorLayout({
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <SidebarTrigger className="md:hidden" />
-          <h1 className="text-xl font-semibold font-headline">{getPageTitle()}</h1>
+          <h1 className="text-xl font-semibold font-headline flex-1">{getPageTitle()}</h1>
+          <WalletStatus />
         </header>
         <main className="p-4 sm:px-6 sm:py-0">{children}</main>
       </SidebarInset>

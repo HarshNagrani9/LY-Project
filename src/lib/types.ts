@@ -42,6 +42,9 @@ export interface HealthRecord {
   bloodPressure?: string;
   pulseRate?: number;
   attachmentUrl?: string;
+  attachmentCid?: string;
+  attachmentEncryptionKey?: string; // base64 encoded AES key
+  attachmentEncryptionIv?: string; // base64 encoded IV
   diagnosis?: Diagnosis;
 }
 

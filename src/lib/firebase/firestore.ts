@@ -111,8 +111,8 @@ export const addHealthRecord = async (
 ) => {
   try {
     // Split metadata (queryable) vs sensitive payload (encrypted)
-    const { type, date, title, content, bloodPressure, pulseRate, diagnosis, attachmentUrl } = recordData as any;
-    const sensitivePayload = { title, content, bloodPressure, pulseRate, diagnosis, attachmentUrl };
+    const { type, date, title, content, bloodPressure, pulseRate, diagnosis, attachmentUrl, attachmentCid, attachmentEncryptionKey, attachmentEncryptionIv } = recordData as any;
+    const sensitivePayload = { title, content, bloodPressure, pulseRate, diagnosis, attachmentUrl, attachmentCid, attachmentEncryptionKey, attachmentEncryptionIv };
     const encryptedData = await encryptObject(sensitivePayload);
 
     const docRef = await addDoc(collection(db, HEALTH_RECORDS_COLLECTION), {
@@ -165,6 +165,9 @@ export const getHealthRecord = async (recordId: string): Promise<HealthRecord | 
           pulseRate: decrypted.pulseRate,
           diagnosis: decrypted.diagnosis,
           attachmentUrl: decrypted.attachmentUrl,
+          attachmentCid: decrypted.attachmentCid,
+          attachmentEncryptionKey: decrypted.attachmentEncryptionKey,
+          attachmentEncryptionIv: decrypted.attachmentEncryptionIv,
         };
         return result;
     } catch (error) {
@@ -207,6 +210,9 @@ export const getHealthRecords = async (userId: string): Promise<HealthRecord[]> 
         pulseRate: decrypted.pulseRate,
         diagnosis: decrypted.diagnosis,
         attachmentUrl: decrypted.attachmentUrl,
+        attachmentCid: decrypted.attachmentCid,
+        attachmentEncryptionKey: decrypted.attachmentEncryptionKey,
+        attachmentEncryptionIv: decrypted.attachmentEncryptionIv,
       };
       return rec;
     }));

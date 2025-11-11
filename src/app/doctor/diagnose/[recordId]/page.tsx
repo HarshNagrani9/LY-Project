@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { PinataFileViewer } from '@/components/dashboard/PinataFileViewer';
 
 
 const recordIcons: Record<HealthRecord['type'], React.ReactElement> = {
@@ -175,16 +176,25 @@ export default function DiagnoseRecordPage() {
                         </div>
                     )}
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
-                    {record.attachmentUrl && (
+                    {record.attachmentCid ? (
+                        <PinataFileViewer 
+                            cid={record.attachmentCid}
+                            fileName={record.attachmentUrl ? record.attachmentUrl.split('/').pop() : undefined}
+                            mimeType="application/pdf"
+                            encryptionKey={record.attachmentEncryptionKey}
+                            iv={record.attachmentEncryptionIv}
+                        />
+                    ) : record.attachmentUrl ? (
+                        // Fallback to local storage if no CID (for old records)
                         <div className="mt-4">
                             <Button asChild variant="outline" size="sm">
                                 <a href={record.attachmentUrl} target="_blank" rel="noopener noreferrer">
                                     <LinkIcon className="mr-2 h-4 w-4" />
-                                    View Attachment
+                                    View Attachment (Local)
                                 </a>
                             </Button>
                         </div>
-                    )}
+                    ) : null}
                 </CardContent>
             </Card>
         </div>
