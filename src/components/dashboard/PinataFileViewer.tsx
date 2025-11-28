@@ -65,7 +65,23 @@ export function PinataFileViewer({
       // Open in new tab
       window.open(url, '_blank');
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch file from Pinata');
+      console.error('File fetch/decrypt error:', err);
+      const errorMessage = err.message || 'Failed to fetch file from Pinata';
+      
+      // Provide more helpful error messages
+      if (errorMessage.includes('Failed to fetch')) {
+        setError(
+          `Network error: Could not fetch file from IPFS. ` +
+          `This might be due to:\n` +
+          `1. File not pinned in Pinata\n` +
+          `2. Network connectivity issues\n` +
+          `3. CORS restrictions\n\n` +
+          `CID: ${cid.slice(0, 20)}...\n` +
+          `Try checking Pinata dashboard to verify the file is pinned.`
+        );
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -161,7 +177,23 @@ export function PinataFileViewer({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      setError(err.message || 'Failed to download file');
+      console.error('File download error:', err);
+      const errorMessage = err.message || 'Failed to download file';
+      
+      // Provide more helpful error messages
+      if (errorMessage.includes('Failed to fetch')) {
+        setError(
+          `Network error: Could not fetch file from IPFS. ` +
+          `This might be due to:\n` +
+          `1. File not pinned in Pinata\n` +
+          `2. Network connectivity issues\n` +
+          `3. CORS restrictions\n\n` +
+          `CID: ${cid.slice(0, 20)}...\n` +
+          `Try checking Pinata dashboard to verify the file is pinned.`
+        );
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

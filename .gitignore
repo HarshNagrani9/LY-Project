@@ -45,3 +45,19 @@ firebase-debug.log
 firestore-debug.log
 
 /public/uploads
+
+# FAISS indices (large binary files)
+src/ai/rag/indices/*.faiss
+src/ai/rag/indices/*.index
+src/ai/rag/indices/metadata/*.json
+!src/ai/rag/indices/.gitkeep
+!src/ai/rag/indices/metadata/.gitkeep
+
+# Python
+src/ai/rag/faiss-service/venv/
+src/ai/rag/faiss-service/__pycache__/
+src/ai/rag/faiss-service/*.pyc
+src/ai/rag/faiss-service/*.pyo
+src/ai/rag/faiss-service/*.pyd
+src/ai/rag/faiss-service/.Python
+src/ai/rag/faiss-service/.env

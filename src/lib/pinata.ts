@@ -109,17 +109,62 @@ export async function getEncryptedFile(cid: string): Promise<ArrayBuffer> {
   if (!cid || typeof cid !== 'string') {
     throw new Error('Invalid CID')
   }
-  const gatewayBase = getGatewayBase()
-  const url = `${gatewayBase}/${cid}`
 
-  const res = await fetch(url, {
-    method: 'GET',
-  })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Failed to fetch from gateway (${res.status}): ${text || res.statusText}`)
+  // List of IPFS gateways to try (fallback if primary fails)
+  const gateways = [
+    getGatewayBase(), // Primary: Pinata gateway
+    'https://ipfs.io/ipfs', // Public IPFS gateway
+    'https://gateway.ipfs.io/ipfs', // Alternative public gateway
+    'https://dweb.link/ipfs', // Protocol Labs gateway
+  ]
+
+  let lastError: Error | null = null
+
+  // Try each gateway until one works
+  for (const gatewayBase of gateways) {
+    try {
+      const url = `${gatewayBase}/${cid}`
+      
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*',
+        },
+        signal: controller.signal,
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        throw new Error(`Gateway ${gatewayBase} returned ${res.status}: ${text || res.statusText}`)
+      }
+
+      const arrayBuffer = await res.arrayBuffer()
+      
+      // Verify we got actual data
+      if (arrayBuffer.byteLength === 0) {
+        throw new Error('Gateway returned empty response')
+      }
+
+      return arrayBuffer
+    } catch (err: any) {
+      lastError = err
+      console.warn(`Failed to fetch from ${gatewayBase}:`, err.message)
+      // Continue to next gateway
+      continue
+    }
   }
-  return await res.arrayBuffer()
+
+  // All gateways failed
+  throw new Error(
+    `Failed to fetch file from all IPFS gateways. Last error: ${lastError?.message || 'Unknown error'}. ` +
+    `CID: ${cid}. Please verify the file is pinned in Pinata.`
+  )
 }
 
 export function gatewayUrlForCid(cid: string): string {
