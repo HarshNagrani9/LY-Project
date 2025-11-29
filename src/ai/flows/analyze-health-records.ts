@@ -37,11 +37,55 @@ const AnalysisOutputSchema = z.object({
 export type AnalysisOutput = z.infer<typeof AnalysisOutputSchema>;
 
 export async function analyzeHealthRecords(input: AnalyzeHealthRecordsInput): Promise<AnalysisOutput> {
-  return analyzeHealthRecordsFlow(input);
+  try {
+    const result = await analyzeHealthRecordsFlow(input);
+    if (!result || !result.summary) {
+      throw new Error('AI analysis returned empty result');
+    }
+    return result;
+  } catch (error) {
+    console.error('Error in analyzeHealthRecords:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Check if it's an API key issue
+    if (errorMessage.includes('API key') || errorMessage.includes('authentication') || errorMessage.includes('401') || errorMessage.includes('403')) {
+      throw new Error('Gemini API key is missing or invalid. Please check your GEMINI_API_KEY environment variable.');
+    }
+    
+    // Check if it's a network/connection issue
+    if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('ECONNREFUSED')) {
+      throw new Error('Failed to connect to AI service. Please check your internet connection and try again.');
+    }
+    
+    // Generic error
+    throw new Error(`Failed to generate health analysis: ${errorMessage}`);
+  }
 }
 
 export async function analyzeAttachment(input: AnalyzeAttachmentInput): Promise<AnalysisOutput> {
-  return analyzeAttachmentFlow(input);
+  try {
+    const result = await analyzeAttachmentFlow(input);
+    if (!result || !result.summary) {
+      throw new Error('AI analysis returned empty result');
+    }
+    return result;
+  } catch (error) {
+    console.error('Error in analyzeAttachment:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Check if it's an API key issue
+    if (errorMessage.includes('API key') || errorMessage.includes('authentication') || errorMessage.includes('401') || errorMessage.includes('403')) {
+      throw new Error('Gemini API key is missing or invalid. Please check your GEMINI_API_KEY environment variable.');
+    }
+    
+    // Check if it's a network/connection issue
+    if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('ECONNREFUSED')) {
+      throw new Error('Failed to connect to AI service. Please check your internet connection and try again.');
+    }
+    
+    // Generic error
+    throw new Error(`Failed to generate attachment analysis: ${errorMessage}`);
+  }
 }
 
 const descriptionPrompt = ai.definePrompt({
@@ -101,8 +145,22 @@ const analyzeHealthRecordsFlow = ai.defineFlow(
     outputSchema: AnalysisOutputSchema,
   },
   async input => {
-    const {output} = await descriptionPrompt(input);
-    return output!;
+    try {
+      const result = await descriptionPrompt(input);
+      if (!result || !result.output) {
+        throw new Error('Prompt returned no output');
+      }
+      
+      // Validate output structure
+      if (!result.output.summary || !Array.isArray(result.output.recommendations)) {
+        throw new Error('Invalid output format from AI');
+      }
+      
+      return result.output;
+    } catch (error) {
+      console.error('Error in analyzeHealthRecordsFlow:', error);
+      throw error;
+    }
   }
 );
 
@@ -113,7 +171,21 @@ const analyzeAttachmentFlow = ai.defineFlow(
     outputSchema: AnalysisOutputSchema,
   },
   async input => {
-    const {output} = await attachmentPrompt(input);
-    return output!;
+    try {
+      const result = await attachmentPrompt(input);
+      if (!result || !result.output) {
+        throw new Error('Prompt returned no output');
+      }
+      
+      // Validate output structure
+      if (!result.output.summary || !Array.isArray(result.output.recommendations)) {
+        throw new Error('Invalid output format from AI');
+      }
+      
+      return result.output;
+    } catch (error) {
+      console.error('Error in analyzeAttachmentFlow:', error);
+      throw error;
+    }
   }
 );

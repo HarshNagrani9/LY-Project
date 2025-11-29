@@ -100,9 +100,21 @@ export function RecordAiAnalysis({ record, user }: RecordAiAnalysisProps) {
 
     } catch (error) {
       console.error('AI analysis failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Could not generate health insights for this record.';
+      
+      // Provide more helpful error messages
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('API key')) {
+        userFriendlyMessage = 'Gemini API key is missing or invalid. Please configure GEMINI_API_KEY in your environment variables.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+        userFriendlyMessage = 'Unable to connect to AI service. Please check your internet connection and try again.';
+      } else if (errorMessage.includes('timeout')) {
+        userFriendlyMessage = 'The AI service is taking too long to respond. Please try again.';
+      }
+      
       toast({
         title: 'Analysis Failed',
-        description: 'Could not generate health insights for this record.',
+        description: userFriendlyMessage,
         variant: 'destructive',
       });
     } finally {

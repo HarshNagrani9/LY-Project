@@ -389,3 +389,4 @@ class FAISSManager:
             self.patient_records_metadata = self.load_metadata(metadata_path)
             self.next_patient_record_id = max(self.patient_records_metadata.keys(), default=-1) + 1
 
+

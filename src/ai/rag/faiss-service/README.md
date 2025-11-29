@@ -282,3 +282,4 @@ If you encounter issues:
 3. Make sure Python version is 3.8+
 4. Check that all dependencies are installed
 
+

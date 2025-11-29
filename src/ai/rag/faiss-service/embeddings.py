@@ -146,3 +146,4 @@ class EmbeddingService:
         test_embedding = self.embed_text("test")
         return len(test_embedding)
 
+
