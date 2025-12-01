@@ -166,27 +166,27 @@ export default function ViewPatientRecordsPage() {
             
             {records.map((record) => (
               <div key={record.id} className="block group">
-                <Card className="transition-all duration-200 group-hover:shadow-lg group-hover:border-primary">
+                <Card className="transition-all duration-200 group-hover:shadow-lg group-hover:border-primary overflow-hidden">
                     <CardHeader className="flex flex-row items-start gap-4">
-                    <div className="p-2 bg-background rounded-full mt-1">{recordIcons[record.type]}</div>
-                    <div className='flex-1'>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <CardTitle className="text-lg">{record.title}</CardTitle>
+                    <div className="p-2 bg-background rounded-full mt-1 flex-shrink-0">{recordIcons[record.type]}</div>
+                    <div className='flex-1 min-w-0 overflow-hidden'>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                                <CardTitle className="text-lg break-words flex-1 min-w-0">{record.title}</CardTitle>
                                 {record.attachmentUrl && (
-                                    <div title="Has attachment">
+                                    <div title="Has attachment" className="flex-shrink-0">
                                         <FileIcon className="h-4 w-4 text-green-600" />
                                     </div>
                                 )}
                             </div>
-                            <Badge variant={record.diagnosis ? 'default' : 'outline'}>{record.diagnosis ? 'Diagnosed' : recordLabels[record.type]}</Badge>
+                            <Badge variant={record.diagnosis ? 'default' : 'outline'} className="flex-shrink-0">{record.diagnosis ? 'Diagnosed' : recordLabels[record.type]}</Badge>
                         </div>
                         <CardDescription>
                             {format(new Date(record.date), 'MMMM d, yyyy')}
                         </CardDescription>
                         </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="overflow-hidden">
                     {(record.bloodPressure || record.pulseRate) && (
                         <div className="mb-4 grid grid-cols-2 gap-4">
                             {record.bloodPressure && (
@@ -209,7 +209,7 @@ export default function ViewPatientRecordsPage() {
                             )}
                         </div>
                         )}
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap text-wrap-anywhere">{record.content}</p>
                     {record.attachmentCid ? (
                         <PinataFileViewer 
                             cid={record.attachmentCid}

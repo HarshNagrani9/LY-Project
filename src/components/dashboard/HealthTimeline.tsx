@@ -62,22 +62,22 @@ export function HealthTimeline({ records, user }: HealthTimelineProps) {
   return (
     <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-4">
       {records.map((record) => (
-        <Card key={record.id}>
+        <Card key={record.id} className="overflow-hidden">
           <CardHeader className="flex flex-row items-start gap-4">
-            <div className="p-2 bg-secondary rounded-full mt-1">
+            <div className="p-2 bg-secondary rounded-full mt-1 flex-shrink-0">
               {recordIcons[record.type]}
             </div>
-            <div className='flex-1'>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{record.title}</CardTitle>
-                <Badge variant="outline">{recordLabels[record.type]}</Badge>
+            <div className='flex-1 min-w-0 overflow-hidden'>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-lg break-words flex-1 min-w-0">{record.title}</CardTitle>
+                <Badge variant="outline" className="flex-shrink-0">{recordLabels[record.type]}</Badge>
               </div>
               <CardDescription>
                 {format(new Date(record.date), 'MMMM d, yyyy')}
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-hidden">
              {(record.bloodPressure || record.pulseRate) && (
               <div className="mb-4 grid grid-cols-2 gap-4">
                 {record.bloodPressure && (
@@ -100,7 +100,7 @@ export function HealthTimeline({ records, user }: HealthTimelineProps) {
                 )}
               </div>
             )}
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap text-wrap-anywhere">
               {record.content}
             </p>
             {record.attachmentCid ? (

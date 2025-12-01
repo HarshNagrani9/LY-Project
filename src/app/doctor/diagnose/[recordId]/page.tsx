@@ -133,26 +133,26 @@ export default function DiagnoseRecordPage() {
   }
 
   return (
-    <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+    <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto p-4">
         {/* Patient Record Details */}
-        <div>
+        <div className="min-w-0">
             <Button variant="outline" size="sm" onClick={() => router.back()} className='mb-4'>
                 <ArrowLeft className="mr-2"/> Back to Patient Records
             </Button>
-            <Card className="sticky top-20">
+            <Card className="sticky top-20 overflow-hidden">
                 <CardHeader className="flex flex-row items-start gap-4">
-                    <div className="p-2 bg-background rounded-full mt-1">{recordIcons[record.type]}</div>
-                    <div className='flex-1'>
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">{record.title}</CardTitle>
-                            <Badge variant="outline">{recordLabels[record.type]}</Badge>
+                    <div className="p-2 bg-background rounded-full mt-1 flex-shrink-0">{recordIcons[record.type]}</div>
+                    <div className='flex-1 min-w-0 overflow-hidden'>
+                        <div className="flex items-center justify-between gap-2">
+                            <CardTitle className="text-lg break-words flex-1 min-w-0">{record.title}</CardTitle>
+                            <Badge variant="outline" className="flex-shrink-0">{recordLabels[record.type]}</Badge>
                         </div>
                         <CardDescription>
                             {format(new Date(record.date), 'MMMM d, yyyy')}
                         </CardDescription>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-hidden">
                     {(record.bloodPressure || record.pulseRate) && (
                         <div className="mb-4 grid grid-cols-2 gap-4">
                             {record.bloodPressure && (
@@ -175,7 +175,7 @@ export default function DiagnoseRecordPage() {
                             )}
                         </div>
                     )}
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{record.content}</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap text-wrap-anywhere">{record.content}</p>
                     {record.attachmentCid ? (
                         <PinataFileViewer 
                             cid={record.attachmentCid}
@@ -200,13 +200,13 @@ export default function DiagnoseRecordPage() {
         </div>
 
         {/* Diagnosis Form */}
-        <div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Add/Edit Diagnosis</CardTitle>
-                    <CardDescription>Provide your professional assessment for this record.</CardDescription>
+        <div className="min-w-0">
+            <Card className="overflow-hidden">
+                <CardHeader className="overflow-hidden">
+                    <CardTitle className="break-words">Add/Edit Diagnosis</CardTitle>
+                    <CardDescription className="break-words">Provide your professional assessment for this record.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-hidden">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             <FormField
@@ -216,7 +216,11 @@ export default function DiagnoseRecordPage() {
                                     <FormItem>
                                         <FormLabel>Diagnosis</FormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="e.g., Patient diagnosed with seasonal allergies..." {...field} rows={4} />
+                                            <Textarea 
+                                                placeholder="e.g., Patient diagnosed with seasonal allergies..." 
+                                                {...field} 
+                                                rows={4}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -229,7 +233,11 @@ export default function DiagnoseRecordPage() {
                                     <FormItem>
                                         <FormLabel>Treatment Plan</FormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="e.g., Prescribe Antihistamine, 10mg once daily..." {...field} rows={4} />
+                                            <Textarea 
+                                                placeholder="e.g., Prescribe Antihistamine, 10mg once daily..." 
+                                                {...field} 
+                                                rows={4}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -242,7 +250,11 @@ export default function DiagnoseRecordPage() {
                                     <FormItem>
                                         <FormLabel>Follow-up Recommendations</FormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="e.g., Recommend follow-up in 2 weeks..." {...field} rows={4} />
+                                            <Textarea 
+                                                placeholder="e.g., Recommend follow-up in 2 weeks..." 
+                                                {...field} 
+                                                rows={4}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

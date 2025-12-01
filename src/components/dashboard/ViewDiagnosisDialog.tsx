@@ -27,18 +27,18 @@ export function ViewDiagnosisDialog({ open, onOpenChange, diagnosis }: ViewDiagn
             {format(new Date(diagnosis.createdAt), 'MMMM d, yyyy')}.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-6">
-            <div>
+        <div className="py-4 space-y-6 overflow-hidden">
+            <div className="overflow-hidden">
                 <h4 className='font-semibold mb-2'>Diagnosis</h4>
-                <p className='text-sm text-muted-foreground p-3 bg-secondary rounded-md'>{diagnosis.diagnosisText}</p>
+                <p className='text-sm text-muted-foreground p-3 bg-secondary rounded-md text-wrap-anywhere whitespace-pre-wrap'>{diagnosis.diagnosisText}</p>
             </div>
-            <div>
+            <div className="overflow-hidden">
                 <h4 className='font-semibold mb-2'>Treatment Plan</h4>
-                <p className='text-sm text-muted-foreground p-3 bg-secondary rounded-md'>{diagnosis.treatmentPlan}</p>
+                <p className='text-sm text-muted-foreground p-3 bg-secondary rounded-md text-wrap-anywhere whitespace-pre-wrap'>{diagnosis.treatmentPlan}</p>
             </div>
-             <div>
+             <div className="overflow-hidden">
                 <h4 className='font-semibold mb-2'>Follow-up Recommendations</h4>
-                <p className='text-sm text-muted-foreground p-3 bg-secondary rounded-md'>{diagnosis.recommendations}</p>
+                <p className='text-sm text-muted-foreground p-3 bg-secondary rounded-md text-wrap-anywhere whitespace-pre-wrap'>{diagnosis.recommendations}</p>
             </div>
         </div>
       </DialogContent>

@@ -109,4 +109,11 @@ body {
     50% { transform: translateY(15px) rotate(5deg); }
     100% { transform: translateY(0px) rotate(0deg); }
   }
+  
+  /* Text wrapping utility for record content */
+  .text-wrap-anywhere {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+  }
 }
