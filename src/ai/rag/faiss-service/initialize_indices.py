@@ -202,7 +202,7 @@ def main():
     print("1. Create diseases index from CSV")
     print("2. Create patient records index from Firestore (optional)")
     print("\nMake sure you have:")
-    print("  - GOOGLE_AI_API_KEY in .env file")
+    print("  - GEMINI_API_KEY in .env file")
     print("  - CSV file at the specified path")
     print("  - Firebase credentials (optional, for patient records)")
     

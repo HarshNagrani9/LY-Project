@@ -20,7 +20,7 @@ pip install -r requirements.txt
    ```
 3. Edit `.env` and add your API key:
    ```env
-   GOOGLE_AI_API_KEY=your_key_here
+   GEMINI_API_KEY=your_key_here
    ```
 
 ### 3. Build Indices

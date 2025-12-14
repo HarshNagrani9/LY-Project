@@ -67,7 +67,7 @@ pip install -r requirements.txt
 
 2. Edit `.env` and add your Google AI API key:
    ```env
-   GOOGLE_AI_API_KEY=your_api_key_here
+   GEMINI_API_KEY=your_api_key_here
    ```
 
    **How to get Google AI API key:**
@@ -222,7 +222,7 @@ Return: Disease info, symptoms, treatments
 
 ## Troubleshooting
 
-### "GOOGLE_AI_API_KEY not found"
+### "GEMINI_API_KEY not found"
 - Make sure `.env` file exists in `faiss-service/` directory
 - Check that the API key is correctly set
 

@@ -40,9 +40,9 @@ class EmbeddingService:
             model: Which embedding model to use
         """
         # Get API key from parameter or environment variable
-        self.api_key = api_key or os.getenv("GOOGLE_AI_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            raise ValueError("GOOGLE_AI_API_KEY not found in environment variables")
+            raise ValueError("GEMINI_API_KEY not found in environment variables")
         
         # Configure Google AI with the API key
         genai.configure(api_key=self.api_key)

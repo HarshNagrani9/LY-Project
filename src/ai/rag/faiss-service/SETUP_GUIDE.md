@@ -105,12 +105,12 @@ cp .env.example .env
 
 **Then edit `.env` file:**
 - Open it in a text editor
-- Replace `your_google_ai_api_key_here` with your actual API key from Step 4
+- Replace `your_GEMINI_API_KEY_here` with your actual API key from Step 4
 - Save the file
 
 **Your `.env` should look like:**
 ```env
-GOOGLE_AI_API_KEY=AIzaSyADMOaiOCtnuZhIsVTNUmRJ4IZw-eysAtU
+GEMINI_API_KEY=AIzaSyADMOaiOCtnuZhIsVTNUmRJ4IZw-eysAtU
 EMBEDDING_MODEL=text-embedding-004
 DISEASES_INDEX_PATH=../indices/diseases_index.faiss
 PATIENT_RECORDS_INDEX_PATH=../indices/patient_records_index.faiss
@@ -165,7 +165,7 @@ python initialize_indices.py
 - At the end: "✅ Diseases index created successfully!"
 
 **If you see errors:**
-- **"GOOGLE_AI_API_KEY not found"**: Check your `.env` file
+- **"GEMINI_API_KEY not found"**: Check your `.env` file
 - **"CSV file not found"**: Check the path in `.env`
 - **API errors**: Check your API key is valid and has credits
 
