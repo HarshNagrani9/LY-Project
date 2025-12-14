@@ -98,19 +98,14 @@ ENCRYPTION_KEY=your_base64_encoded_32_byte_key
 
 # Google Gemini AI
 GEMINI_API_KEY=your_gemini_api_key
-GOOGLE_GENAI_API_KEY=your_gemini_api_key  # Alternative env var name
 
 # Pinata IPFS Configuration
 PINATA_JWT=your_pinata_jwt_token
 # OR use API Key + Secret (alternative to JWT)
 PINATA_API_KEY=your_pinata_api_key
-PINATA_API_SECRET=your_pinata_secret
-PINATA_GATEWAY_SUBDOMAIN=your_subdomain  # Optional
 
 # Smart Contract Configuration
 NEXT_PUBLIC_CONTRACT_ADDRESS=0xYourContractAddress
-NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/your_infura_key
-# For mainnet: NEXT_PUBLIC_MAINNET_RPC_URL=...
 
 # FAISS Service (optional, defaults to localhost:8000)
 FAISS_SERVICE_URL=http://localhost:8000
