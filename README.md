@@ -424,14 +424,6 @@ LY-Project/
 - Review Firestore security rules before production deployment
 - Audit smart contracts before mainnet deployment
 
-## 📝 License
-
-[Your License Here]
-
-## 👥 Contributors
-
-[Your Name/Team]
-
 ---
 
 **Need Help?** Check the troubleshooting section or open an issue in the repository.
