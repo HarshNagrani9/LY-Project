@@ -101,7 +101,6 @@ GEMINI_API_KEY=your_gemini_api_key
 
 # Pinata IPFS Configuration
 PINATA_JWT=your_pinata_jwt_token
-# OR use API Key + Secret (alternative to JWT)
 PINATA_API_KEY=your_pinata_api_key
 
 # Smart Contract Configuration
