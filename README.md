@@ -160,7 +160,7 @@ service cloud.firestore {
 
 ## 📜 Smart Contract Setup
 
-### Option 1: Using Sepolia Testnet (Development)
+### Using Sepolia Testnet (Development)
 
 1. **Install MetaMask** browser extension
 2. **Get Sepolia ETH** from a faucet:
@@ -180,34 +180,7 @@ service cloud.firestore {
 4. **Update Environment Variables**:
    ```env
    NEXT_PUBLIC_CONTRACT_ADDRESS=0xYourDeployedContractAddress
-   NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/your_key
    ```
-
-### Option 2: Using Ethereum Mainnet (Production)
-
-1. **Get Real ETH** from an exchange
-2. **Deploy via Remix** (same process as above):
-   - Switch MetaMask to Ethereum Mainnet
-   - Deploy contract (will cost real ETH for gas fees)
-   - Copy contract address
-
-3. **Update Environment Variables**:
-   ```env
-   NEXT_PUBLIC_CONTRACT_ADDRESS=0xYourMainnetContractAddress
-   NEXT_PUBLIC_MAINNET_RPC_URL=https://mainnet.infura.io/v3/your_key
-   ```
-
-### Option 3: Using Layer 2 (Recommended for Production)
-
-For lower costs, deploy to **Polygon** or **Base**:
-
-1. **Add Network to MetaMask**:
-   - **Polygon**: Chain ID 137, RPC: `https://polygon-rpc.com`
-   - **Base**: Chain ID 8453, RPC: `https://mainnet.base.org`
-
-2. **Bridge ETH** to the L2 network
-3. **Deploy contract** via Remix
-4. **Update contract.ts** to use L2 network configuration
 
 ## 🤖 FAISS RAG Service Setup
 
